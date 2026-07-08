@@ -155,9 +155,11 @@ def prisma_points(xc, yc, w, h):
         xc - half_body, yc - half_tail_h                # Intersección Cola Izquierda (Arriba)
     ]
 
-def nombre_usuario():
-    n = entrada_widget.get().strip()
-    return n if n else "VISITANTE UCABISTA"
+def nombre_usuario(*args):
+    texto_actual = entrada_widget.get()
+    texto_limpio = "".join(letra.upper() for letra in texto_actual if letra.isalpha())
+    if texto_actual != texto_limpio:
+        var_nombre.set(texto_limpio)
 
 def abrir_ventana_apensar():
     n = nombre_usuario()
