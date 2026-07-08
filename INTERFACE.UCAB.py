@@ -156,12 +156,8 @@ def prisma_points(xc, yc, w, h):
     ]
 
 def nombre_usuario():
-    if entrada_widget is None:
-        return "VISITANTE UCABISTA"
-
-    texto_actual = entrada_widget.get()
-    texto_limpio = "".join(letra.upper() for letra in texto_actual if letra.isalpha())
-    return texto_limpio if texto_limpio else "VISITANTE UCABISTA"
+    n = entrada_widget.get().strip()
+    return n if n else "VISITANTE UCABISTA"
 
 
 def abrir_ventana_apensar():
