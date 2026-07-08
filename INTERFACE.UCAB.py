@@ -81,6 +81,8 @@ def actualizar_fondo_cover():
 
 # ---------------- UI dibujada sobre el canvas ----------------
 
+entrada_widget = None
+
 entrada_widget = Entry(root, font=("Arial", 12), justify="center", width=20,
                        bd=0, highlightthickness=1, relief="flat")
 entrada_widget.config(highlightbackground="#cccccc", highlightcolor="#aaaaaa")
@@ -144,9 +146,13 @@ def prisma_points(xc, yc, w, h):
         xc - half_body, yc - half_tail_h                # Intersección Cola Izquierda (Arriba)
     ]
 
+entrada_widget = None
+
 def nombre_usuario():
-    n = entrada_widget.get().strip()
-    return n if n else "VISITANTE UCABISTA"
+    texto_actual = entrada_widget.get() 
+    texto_limpio = "".join(letra.upper() for letra in texto_actual if letra.isalpha())
+    return texto_limpio if texto_limpio else "VISITANTE UCABISTA"
+
 
 def abrir_ventana_apensar():
     n = nombre_usuario()
