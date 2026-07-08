@@ -94,7 +94,6 @@ entrada_widget = Entry(
     highlightbackground="#cccccc",
     highlightcolor="#aaaaaa"
 )
-entrada_widget.config(padx=8, pady=4)
 
 def cargar_logo(ruta, ancho_max):
     try:
