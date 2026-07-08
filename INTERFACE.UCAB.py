@@ -81,11 +81,20 @@ def actualizar_fondo_cover():
 
 # ---------------- UI dibujada sobre el canvas ----------------
 
-entrada_widget = None
-
-entrada_widget = Entry(root, font=("Arial", 12), justify="center", width=20,
-                       bd=0, highlightthickness=1, relief="flat")
-entrada_widget.config(highlightbackground="#cccccc", highlightcolor="#aaaaaa")
+entrada_widget = Entry(
+    root,
+    font=("Arial", 12),
+    justify="center",
+    width=20,
+    bd=1,
+    relief="solid",
+    bg=TEXT_LIGHT,
+    fg=TEXT_DARK,
+    highlightthickness=1,
+    highlightbackground="#cccccc",
+    highlightcolor="#aaaaaa"
+)
+entrada_widget.config(padx=8, pady=4)
 
 def cargar_logo(ruta, ancho_max):
     try:
@@ -224,8 +233,9 @@ def dibujar_ui():
                             "Ingresa tu nombre de usuario para comenzar a jugar",
                             subtitle_font, TEXT_LIGHT, shadow_color="#000000", offset=(1,1), tags=("ui",))
 
-    entrada_w = min(420, int(W * 0.32)) 
-    main_canvas.create_window(x_center, y_top + 92, window=entrada_widget, width=entrada_w, height=34, tags=("ui",))
+    entrada_w = min(420, int(W * 0.32))
+    main_canvas.create_window(x_center, y_top + 92, window=entrada_widget, width=entrada_w, height=34, tags=("entry_widget",))
+    entrada_widget.focus_set()
 
     create_text_with_shadow(main_canvas, x_center, y_top + 132,
                             "Selecciona un juego para comenzar",
