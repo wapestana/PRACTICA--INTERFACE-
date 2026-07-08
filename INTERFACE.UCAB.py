@@ -81,19 +81,9 @@ def actualizar_fondo_cover():
 
 # ---------------- UI dibujada sobre el canvas ----------------
 
-entrada_widget = Entry(
-    root,
-    font=("Arial", 12),
-    justify="center",
-    width=20,
-    bd=1,
-    relief="solid",
-    bg=TEXT_LIGHT,
-    fg=TEXT_DARK,
-    highlightthickness=1,
-    highlightbackground="#cccccc",
-    highlightcolor="#aaaaaa"
-)
+entrada_widget = Entry(root, font=("Arial", 12), justify="center", width=20,
+                       bd=0, highlightthickness=1, relief="flat")
+entrada_widget.config(highlightbackground="#cccccc", highlightcolor="#aaaaaa")
 
 def cargar_logo(ruta, ancho_max):
     try:
@@ -154,13 +144,9 @@ def prisma_points(xc, yc, w, h):
         xc - half_body, yc - half_tail_h                # Intersección Cola Izquierda (Arriba)
     ]
 
-entrada_widget = None
-
 def nombre_usuario():
-    texto_actual = entrada_widget.get() 
-    texto_limpio = "".join(letra.upper() for letra in texto_actual if letra.isalpha())
-    return texto_limpio if texto_limpio else "VISITANTE UCABISTA"
-
+    n = entrada_widget.get().strip()
+    return n if n else "VISITANTE UCABISTA"
 
 def abrir_ventana_apensar():
     n = nombre_usuario()
@@ -232,9 +218,8 @@ def dibujar_ui():
                             "Ingresa tu nombre de usuario para comenzar a jugar",
                             subtitle_font, TEXT_LIGHT, shadow_color="#000000", offset=(1,1), tags=("ui",))
 
-    entrada_w = min(420, int(W * 0.32))
-    main_canvas.create_window(x_center, y_top + 92, window=entrada_widget, width=entrada_w, height=34, tags=("entry_widget",))
-    entrada_widget.focus_set()
+    entrada_w = min(420, int(W * 0.32)) 
+    main_canvas.create_window(x_center, y_top + 92, window=entrada_widget, width=entrada_w, height=34, tags=("ui",))
 
     create_text_with_shadow(main_canvas, x_center, y_top + 132,
                             "Selecciona un juego para comenzar",
