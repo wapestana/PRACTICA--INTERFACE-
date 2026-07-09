@@ -88,10 +88,26 @@ class TriviaUCABApp:
 
     def create_rounded_rect(self, x1, y1, x2, y2, radius=25, **kwargs):
         points = [
-            x1 + radius, y1, x1 + radius, y1, x2 - radius, y1, x2 - radius, y1, x2, y1,
-            x2, y1 + radius, x2, y1 + radius, x2, y2 - radius, x2, y2 - radius, x2, y2,
-            x2 - radius, y2, x2 - radius, y2, x1 + radius, y2, x1 + radius, y2, x1, y2,
-            x1, y2 - radius, x1, y2 - radius, x1, y1 + radius, x1, y1 + radius, x1, y1,
+            x1 + radius, y1,
+            x1 + radius, y1,
+            x2 - radius, y1,
+            x2 - radius, y1,
+            x2, y1,
+            x2, y1 + radius,
+            x2, y1 + radius,
+            x2, y2 - radius,
+            x2, y2 - radius,
+            x2, y2,
+            x2 - radius, y2,
+            x2 - radius, y2,
+            x1 + radius, y2,
+            x1 + radius, y2,
+            x1, y2,
+            x1, y2 - radius,
+            x1, y2 - radius,
+            x1, y1 + radius,
+            x1, y1 + radius,
+            x1, y1,
         ]
         return self.canvas.create_polygon(points, **kwargs, smooth=True)
 
@@ -122,8 +138,10 @@ class TriviaUCABApp:
         self.custom_btns = []
         btn_w, btn_h = 380, 90
         positions = [
-            (center_x - 210, center_y + 90), (center_x + 210, center_y + 90),
-            (center_x - 210, center_y + 200), (center_x + 210, center_y + 200),
+            (center_x - 210, center_y + 90),
+            (center_x + 210, center_y + 90),
+            (center_x - 210, center_y + 200),
+            (center_x + 210, center_y + 200),
         ]
 
         for i, pos in enumerate(positions):
@@ -223,208 +241,193 @@ class TriviaUCABApp:
         self.root.destroy()
 
 
-# ==================================
-# VARIABLES Y FUNCIONES: WORDLE UCAB 
-# ==================================
-wordle_palabras = ["UCAB", "AULAS", "NESTEA", "FERIA", "LOBOS", "ANDRES", "BELLO"]
-wordle_palabras_restantes = []
-wordle_palabras_adivinadas = 0
-wordle_palabra_secreta = ""
-wordle_intento_actual = 0
-wordle_largo = 0
-wordle_letras_escritas = []
-wordle_cuadros_grid = []
-wordle_canvas = None
-wordle_frame_grid = None
-wordle_text_feedback_id = None
-wordle_bg_photo = None
-wordle_enable_input = True
-wordle_root_window = None
-wordle_player_name = ""
-wordle_overlay_photo = None
+# =========================
+# CLASE: WORDLE UCAB
+# =========================
+class WordleUCABApp:
+    def __init__(self, root, player_name):
+        self.root = root
+        self.player_name = player_name
+        self.root.title("Wordle UCAB v1.0")
+        self.root.state("zoomed")
+        self.root.configure(bg=UCAB_GREEN)
 
-def load_background_wordle():
-    global wordle_bg_photo
-    try:
-        if os.path.exists(FONDO_RUTA):
-            img = Image.open(FONDO_RUTA).convert("RGBA")
-            wordle_bg_photo = ImageTk.PhotoImage(img.resize((max(1, wordle_root_window.winfo_screenwidth()), max(1, wordle_root_window.winfo_screenheight())), Image.Resampling.LANCZOS))
-            wordle_canvas.create_image(0, 0, image=wordle_bg_photo, anchor="nw")
-        else:
-            wordle_canvas.configure(bg="#1a1a1a")
-    except Exception:
-        wordle_canvas.configure(bg="#1a1a1a")
+        self.palabras = ["UCAB", "AULAS", "NESTEA", "FERIA", "LOBOS", "ANDRES", "BELLO"]
+        self.palabras_restantes = []
+        self.palabras_adivinadas = 0
+        self.palabra_secreta = ""
+        self.intento_actual = 0
+        self.largo = 0
+        self.letras_escritas = []
+        self.cuadros_grid = []
 
-def inicializar_interfaz_juego_wordle():
-    global wordle_enable_input, wordle_palabras_restantes, wordle_palabra_secreta
-    global wordle_intento_actual, wordle_largo, wordle_letras_escritas
-    global wordle_frame_grid, wordle_cuadros_grid, wordle_text_feedback_id, wordle_overlay_photo
+        self.canvas = tk.Canvas(self.root, highlightthickness=0)
+        self.canvas.pack(fill="both", expand=True)
+        self.frame_grid = None
+        self.text_feedback_id = None
+        self.bg_photo = None
+        self.enable_input = True
 
-    wordle_enable_input = True  # Asegura reactivar la lectura del teclado al cambiar de palabra
-    wordle_canvas.delete("juego")
-    wordle_root_window.update()
-    canvas_w = max(1, wordle_canvas.winfo_width())
-    canvas_h = max(1, wordle_canvas.winfo_height())
-    center_x = canvas_w / 2
+        self.root.bind_all("<Key>", self.on_key)
+        self.canvas.focus_set()
 
-    if not wordle_palabras_restantes:
-        wordle_palabras_restantes = wordle_palabras.copy()
-        random.shuffle(wordle_palabras_restantes)
+        self.load_background()
+        self.inicializar_interfaz_juego()
 
-    wordle_palabra_secreta = wordle_palabras_restantes.pop()
-    wordle_intento_actual = 0
-    wordle_largo = len(wordle_palabra_secreta)
-    wordle_letras_escritas = []
-
-    header_w = min(canvas_w * 0.78, 760)
-    header_h = max(90, int(canvas_h * 0.13))
-    header_x0 = int(center_x - header_w / 2)
-    header_y0 = int(canvas_h * 0.03)
-    header_y1 = header_y0 + header_h
-
-    wordle_canvas.create_rectangle(header_x0, header_y0, header_x0 + header_w, header_y1, fill=UCAB_GREEN, outline=UCAB_YELLOW, width=max(2, int(canvas_w * 0.003)), tags=("juego",))
-    wordle_canvas.create_text(center_x, header_y0 + (header_h * 0.35), text="WORDLE UCAB 🎓", font=("Arial", max(18, int(min(canvas_w, canvas_h) * 0.03)), "bold"), fill=UCAB_YELLOW, tags=("juego",))
-    wordle_canvas.create_text(center_x, header_y0 + (header_h * 0.75), text=f"Jugador: {wordle_player_name}         |         Palabras: {wordle_palabras_adivinadas}/4", font=("Arial", max(11, int(min(canvas_w, canvas_h) * 0.016)), "bold"), fill=TEXT_LIGHT, tags=("juego",))
-
-    panel_w = min(canvas_w * 0.82, 720)
-    panel_h = min(canvas_h * 0.62, 520)
-    panel_x0 = int(center_x - panel_w / 2)
-    panel_y0 = header_y1 + max(10, int(canvas_h * 0.02))
-    panel_y1 = panel_y0 + panel_h
-
-    overlay = Image.new("RGBA", (max(2, int(panel_w)), max(2, int(panel_h))), (0, 0, 0, 170))
-    wordle_overlay_photo = ImageTk.PhotoImage(overlay)
-    wordle_canvas.create_image(center_x, panel_y0 + panel_h / 2, image=wordle_overlay_photo, anchor="center", tags=("juego",))
-
-    wordle_frame_grid = Frame(wordle_canvas, bg="#1a1a1a")
-    wordle_canvas.create_window(center_x, panel_y0 + (panel_h * 0.42), window=wordle_frame_grid, tags=("juego",))
-
-    wordle_cuadros_grid = []
-    font_size = max(16, int(min(canvas_w, canvas_h) * 0.025))
-    padx_value = max(3, int(min(canvas_w, canvas_h) * 0.007))
-    pady_value = max(3, int(min(canvas_w, canvas_h) * 0.007))
-    for fila in range(6):
-        fila_cuadros = []
-        for col in range(wordle_largo):
-            lbl = Label(wordle_frame_grid, text="", font=("Comic Sans MS", font_size, "bold"), width=4, height=1, bd=2, relief="solid", bg="white", fg="black")
-            lbl.grid(row=fila, column=col, padx=padx_value, pady=pady_value)
-            fila_cuadros.append(lbl)
-        wordle_cuadros_grid.append(fila_cuadros)
-
-    instruccion = f"Usa tu teclado para escribir la palabra de {wordle_largo} letras"
-    wordle_text_feedback_id = wordle_canvas.create_text(center_x, panel_y0 + (panel_h * 0.88), text=instruccion, font=("Arial", max(11, int(min(canvas_w, canvas_h) * 0.018)), "italic", "bold"), fill=TEXT_LIGHT, tags=("juego",))
-
-    btn_salir = Button(wordle_canvas, text="Salir del Juego", font=("Arial", max(10, int(min(canvas_w, canvas_h) * 0.014)), "bold"), bg="#D93843", fg=TEXT_LIGHT, activebackground="#A6242B", bd=0, padx=20, pady=6, cursor="hand2", command=wordle_root_window.destroy)
-    wordle_canvas.create_window(center_x, panel_y1 + max(20, int(canvas_h * 0.04)), window=btn_salir, tags=("juego",))
-    
-    wordle_canvas.focus_set()
-
-def actualizar_feedback_wordle(texto, color):
-    if wordle_canvas and wordle_text_feedback_id:
-        wordle_canvas.itemconfig(wordle_text_feedback_id, text=texto, fill=color)
-
-def mostrar_boton_siguiente_wordle(texto_boton):
-    global wordle_enable_input
-    wordle_enable_input = False
-    canvas_w = max(1, wordle_canvas.winfo_width())
-    canvas_h = max(1, wordle_canvas.winfo_height())
-    boton_siguiente = Button(wordle_canvas, text=texto_boton, font=("Arial", max(10, int(min(canvas_w, canvas_h) * 0.016)), "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK, activebackground="#dca61d", bd=0, padx=15, pady=8, command=inicializar_interfaz_juego_wordle)
-    if wordle_text_feedback_id:
-        coords = wordle_canvas.coords(wordle_text_feedback_id)
-        pos_y = coords[1] - max(40, int(canvas_h * 0.06))
-    else:
-        pos_y = int(canvas_h * 0.70)
-    wordle_canvas.create_window(canvas_w / 2, pos_y, window=boton_siguiente, tags=("juego",))
-
-def mostrar_felicitaciones_wordle():
-    global wordle_enable_input
-    wordle_enable_input = False
-    mensaje = f"🎓 ¡Felicidades {wordle_player_name}! Has completado el Wordle UCAB con éxito."
-    messagebox.showinfo("¡Felicidades!", mensaje, parent=wordle_root_window)
-    wordle_root_window.destroy()
-
-def on_key_wordle(event):
-    global wordle_intento_actual, wordle_letras_escritas, wordle_palabras_adivinadas
-    if not wordle_enable_input:
-        return
-    if wordle_intento_actual >= 6:
-        return
-    if event.char is None:
-        return
-
-    tecla = event.char.upper()
-
-    if tecla.isalpha() and len(tecla) == 1:
-        if len(wordle_letras_escritas) < wordle_largo:
-            wordle_letras_escritas.append(tecla)
-            columna_actual = len(wordle_letras_escritas) - 1
-            wordle_cuadros_grid[wordle_intento_actual][columna_actual].config(text=tecla)
-    elif event.keysym == "BackSpace":
-        if len(wordle_letras_escritas) > 0:
-            columna_a_borrar = len(wordle_letras_escritas) - 1
-            wordle_cuadros_grid[wordle_intento_actual][columna_a_borrar].config(text="")
-            wordle_letras_escritas.pop()
-    elif event.keysym == "Return":
-        if len(wordle_letras_escritas) != wordle_largo:
-            actualizar_feedback_wordle(f"¡Te faltan letras! Deben ser {wordle_largo}", UCAB_YELLOW)
-            return
-
-        intento = "".join(wordle_letras_escritas)
-        actualizar_feedback_wordle("", TEXT_LIGHT)
-        copia_letras = list(wordle_palabra_secreta)
-        colores = ["#787C7E"] * wordle_largo
-
-        for i in range(wordle_largo):
-            if intento[i] == wordle_palabra_secreta[i]:
-                colores[i] = "#6AAA64"
-                copia_letras[i] = None
-
-        for i in range(wordle_largo):
-            if colores[i] != "#6AAA64":
-                if intento[i] in copia_letras:
-                    colores[i] = "#C9B458"
-                    copia_letras[copia_letras.index(intento[i])] = None
-
-        for i in range(wordle_largo):
-            wordle_cuadros_grid[wordle_intento_actual][i].config(bg=colores[i], fg="white")
-
-        if intento == wordle_palabra_secreta:
-            wordle_palabras_adivinadas += 1
-            if wordle_palabras_adivinadas >= 4:
-                mostrar_felicitaciones_wordle()
+    def load_background(self):
+        fondo_wordle = "ucab.jpg"
+        try:
+            if os.path.exists(fondo_wordle):
+                img = Image.open(fondo_wordle).convert("RGBA")
+                self.bg_photo = ImageTk.PhotoImage(img.resize((max(1, self.root.winfo_screenwidth()), max(1, self.root.winfo_screenheight())), Image.Resampling.LANCZOS))
+                self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
             else:
-                actualizar_feedback_wordle(f"¡EXCELENTE! Llevas {wordle_palabras_adivinadas}/4 🎉", "#6AAA64")
-                mostrar_boton_siguiente_wordle("SIGUIENTE PALABRA →")
+                self.canvas.configure(bg="#1a1a1a")
+        except Exception:
+            self.canvas.configure(bg="#1a1a1a")
+
+    def inicializar_interfaz_juego(self):
+        self.canvas.delete("juego")
+        self.root.update()
+        
+        # --- SOLUCIÓN AQUÍ ---
+        self.enable_input = True      # Reactiva la entrada por teclado para la siguiente palabra
+        self.canvas.focus_set()       # Devuelve el foco de eventos al canvas principal
+        
+        canvas_w = max(1, self.canvas.winfo_width())
+        canvas_h = max(1, self.canvas.winfo_height())
+        center_x = canvas_w / 2
+
+        if not self.palabras_restantes:
+            self.palabras_restantes = self.palabras.copy()
+            random.shuffle(self.palabras_restantes)
+
+        self.palabra_secreta = self.palabras_restantes.pop()
+        self.intento_actual = 0
+        self.largo = len(self.palabra_secreta)
+        self.letras_escritas = []
+
+        header_w = min(canvas_w * 0.78, 760)
+        header_h = max(90, int(canvas_h * 0.13))
+        header_x0 = int(center_x - header_w / 2)
+        header_y0 = int(canvas_h * 0.03)
+        header_y1 = header_y0 + header_h
+
+        self.canvas.create_rectangle(header_x0, header_y0, header_x0 + header_w, header_y1, fill=UCAB_GREEN, outline=UCAB_YELLOW, width=max(2, int(canvas_w * 0.003)), tags=("juego",))
+        self.canvas.create_text(center_x, header_y0 + (header_h * 0.35), text="WORDLE UCAB 🎓", font=("Arial", max(18, int(min(canvas_w, canvas_h) * 0.03)), "bold"), fill=UCAB_YELLOW, tags=("juego",))
+        self.canvas.create_text(center_x, header_y0 + (header_h * 0.75), text=f"Jugador: {self.player_name}         |         Palabras: {self.palabras_adivinadas}/4", font=("Arial", max(11, int(min(canvas_w, canvas_h) * 0.016)), "bold"), fill=TEXT_LIGHT, tags=("juego",))
+
+        panel_w = min(canvas_w * 0.82, 720)
+        panel_h = min(canvas_h * 0.62, 520)
+        panel_x0 = int(center_x - panel_w / 2)
+        panel_y0 = header_y1 + max(10, int(canvas_h * 0.02))
+        panel_y1 = panel_y0 + panel_h
+
+        overlay = Image.new("RGBA", (max(2, int(panel_w)), max(2, int(panel_h))), (0, 0, 0, 170))
+        self.overlay_photo = ImageTk.PhotoImage(overlay)
+        self.canvas.create_image(center_x, panel_y0 + panel_h / 2, image=self.overlay_photo, anchor="center", tags=("juego",))
+
+        self.frame_grid = Frame(self.canvas, bg="#1a1a1a")
+        self.canvas.create_window(center_x, panel_y0 + (panel_h * 0.42), window=self.frame_grid, tags=("juego",))
+
+        self.cuadros_grid = []
+        font_size = max(16, int(min(canvas_w, canvas_h) * 0.025))
+        padx_value = max(3, int(min(canvas_w, canvas_h) * 0.007))
+        pady_value = max(3, int(min(canvas_w, canvas_h) * 0.007))
+        for fila in range(6):
+            fila_cuadros = []
+            for col in range(self.largo):
+                lbl = Label(self.frame_grid, text="", font=("Comic Sans MS", font_size, "bold"), width=4, height=1, bd=2, relief="solid", bg="white", fg="black")
+                lbl.grid(row=fila, column=col, padx=padx_value, pady=pady_value)
+                fila_cuadros.append(lbl)
+            self.cuadros_grid.append(fila_cuadros)
+
+        instruccion = f"Usa tu teclado para escribir la palabra de {self.largo} letras"
+        self.text_feedback_id = self.canvas.create_text(center_x, panel_y0 + (panel_h * 0.88), text=instruccion, font=("Arial", max(11, int(min(canvas_w, canvas_h) * 0.018)), "italic", "bold"), fill=TEXT_LIGHT, tags=("juego",))
+
+        btn_salir = Button(self.canvas, text="Salir del Juego", font=("Arial", max(10, int(min(canvas_w, canvas_h) * 0.014)), "bold"), bg="#D93843", fg=TEXT_LIGHT, activebackground="#A6242B", bd=0, padx=20, pady=6, cursor="hand2", command=self.root.destroy)
+        self.canvas.create_window(center_x, panel_y1 + max(20, int(canvas_h * 0.04)), window=btn_salir, tags=("juego",))
+
+    def actualizar_feedback(self, texto, color):
+        if self.canvas and self.text_feedback_id:
+            self.canvas.itemconfig(self.text_feedback_id, text=texto, fill=color)
+
+    def mostrar_boton_siguiente(self, texto_boton):
+        self.enable_input = False
+        canvas_w = max(1, self.canvas.winfo_width())
+        canvas_h = max(1, self.canvas.winfo_height())
+        boton_siguiente = Button(self.canvas, text=texto_boton, font=("Arial", max(10, int(min(canvas_w, canvas_h) * 0.016)), "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK, activebackground="#dca61d", bd=0, padx=15, pady=8, command=self.inicializar_interfaz_juego)
+        if self.text_feedback_id:
+            coords = self.canvas.coords(self.text_feedback_id)
+            pos_y = coords[1] - max(40, int(canvas_h * 0.06))
+        else:
+            pos_y = int(canvas_h * 0.70)
+        self.canvas.create_window(canvas_w / 2, pos_y, window=boton_siguiente, tags=("juego",))
+
+    def mostrar_felicitaciones_wordle(self):
+        self.enable_input = False
+        mensaje = f"🎓 ¡Felicidades {self.player_name}! Has completado el Wordle UCAB con éxito."
+        messagebox.showinfo("¡Felicidades!", mensaje, parent=self.root)
+        self.root.destroy()
+
+    def on_key(self, event):
+        if not self.enable_input:
+            return
+        if self.intento_actual >= 6:
+            return
+        if event.char is None:
             return
 
-        wordle_intento_actual += 1
-        wordle_letras_escritas = []
-        if wordle_intento_actual >= 6:
-            actualizar_feedback_wordle(f"Se acabaron los intentos. Era: {wordle_palabra_secreta} 😢", "#D93843")
-            mostrar_boton_siguiente_wordle("INTENTAR DE NUEVO 🔄")
+        tecla = event.char.upper()
 
-def iniciar_juego_wordle(v, n):
-    global wordle_root_window, wordle_player_name, wordle_canvas
-    global wordle_palabras_restantes, wordle_palabras_adivinadas
-    
-    wordle_root_window = v
-    wordle_player_name = n
-    wordle_root_window.title("Wordle UCAB v1.0")
-    wordle_root_window.state("zoomed")
-    wordle_root_window.configure(bg=UCAB_GREEN)
-    
-    wordle_palabras_restantes = []
-    wordle_palabras_adivinadas = 0
+        if tecla.isalpha() and len(tecla) == 1:
+            if len(self.letras_escritas) < self.largo:
+                self.letras_escritas.append(tecla)
+                columna_actual = len(self.letras_escritas) - 1
+                self.cuadros_grid[self.intento_actual][columna_actual].config(text=tecla)
+        elif event.keysym == "BackSpace":
+            if len(self.letras_escritas) > 0:
+                columna_a_borrar = len(self.letras_escritas) - 1
+                self.cuadros_grid[self.intento_actual][columna_a_borrar].config(text="")
+                self.letras_escritas.pop()
+        elif event.keysym == "Return":
+            if len(self.letras_escritas) != self.largo:
+                self.actualizar_feedback(f"¡Te faltan letras! Deben ser {self.largo}", UCAB_YELLOW)
+                return
 
-    wordle_canvas = tk.Canvas(wordle_root_window, highlightthickness=0)
-    wordle_canvas.pack(fill="both", expand=True)
+            intento = "".join(self.letras_escritas)
+            self.actualizar_feedback("", TEXT_LIGHT)
+            copia_letras = list(self.palabra_secreta)
+            colores = ["#787C7E"] * self.largo
 
-    # Se asocia el evento al Toplevel del juego actual para evitar colisiones globales
-    wordle_root_window.bind("<Key>", on_key_wordle)
-    wordle_canvas.focus_set()
+            for i in range(self.largo):
+                if intento[i] == self.palabra_secreta[i]:
+                    colores[i] = "#6AAA64"
+                    copia_letras[i] = None
 
-    load_background_wordle()
-    inicializar_interfaz_juego_wordle()
+            for i in range(self.largo):
+                if colores[i] != "#6AAA64":
+                    if intento[i] in copia_letras:
+                        colores[i] = "#C9B458"
+                        copia_letras[copia_letras.index(intento[i])] = None
+
+            for i in range(self.largo):
+                self.cuadros_grid[self.intento_actual][i].config(bg=colores[i], fg="white")
+
+            if intento == self.palabra_secreta:
+                self.palabras_adivinadas += 1
+                if self.palabras_adivinadas >= 4:
+                    self.mostrar_felicitaciones_wordle()
+                else:
+                    self.actualizar_feedback(f"¡EXCELENTE! Llevas {self.palabras_adivinadas}/4 🎉", "#6AAA64")
+                    self.mostrar_boton_siguiente("SIGUIENTE PALABRA →")
+                return
+
+            self.intento_actual += 1
+            self.letras_escritas = []
+            if self.intento_actual >= 6:
+                self.actualizar_feedback(f"Se acabaron los intentos. Era: {self.palabra_secreta} 😢", "#D93843")
+                self.mostrar_boton_siguiente("INTENTAR DE NUEVO 🔄")
 
 
 # =========================
@@ -441,7 +444,9 @@ def cargar_imagen_fondo(ruta):
         print("No se pudo cargar imagen de fondo:", e)
         return None
 
+
 fondo_pil = cargar_imagen_fondo(FONDO_RUTA)
+
 
 def aplicar_oscurecimiento(img_pil, factor):
     if img_pil is None or factor <= 0:
@@ -449,6 +454,7 @@ def aplicar_oscurecimiento(img_pil, factor):
     overlay = Image.new("RGBA", img_pil.size, (0, 0, 0, int(255 * factor)))
     base = img_pil.copy()
     return Image.alpha_composite(base, overlay)
+
 
 root = Tk()
 root.title("El Ucabista - Desafío Digital")
@@ -461,6 +467,7 @@ main_canvas.pack(fill="both", expand=True)
 
 entrada_widget = Entry(root, font=("Arial", 12), justify="center", width=20, bd=0, highlightthickness=1, relief="flat")
 entrada_widget.config(highlightbackground="#cccccc", highlightcolor="#aaaaaa")
+
 
 def cargar_logo(ruta, ancho_max):
     try:
@@ -476,17 +483,22 @@ def cargar_logo(ruta, ancho_max):
         print("No se pudo cargar logo:", e)
         return None
 
+
 logo_img = cargar_logo(LOGO_RUTA, 160)
+
 
 def clamp(v, a=0, b=255):
     return max(a, min(b, int(v)))
+
 
 def hex_to_rgb(h):
     h = h.lstrip("#")
     return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 
+
 def rgb_to_hex(rgb):
     return "#{:02x}{:02x}{:02x}".format(*rgb)
+
 
 def adjust_brightness(hexcol, factor):
     r, g, b = hex_to_rgb(hexcol)
@@ -494,6 +506,7 @@ def adjust_brightness(hexcol, factor):
     g = clamp(g * factor)
     b = clamp(b * factor)
     return rgb_to_hex((r, g, b))
+
 
 def prisma_points(xc, yc, w, h):
     tail_w = w * 0.12
@@ -519,9 +532,11 @@ def prisma_points(xc, yc, w, h):
         xc - half_body, yc - half_tail_h,
     ]
 
+
 def nombre_usuario():
-    n = entrada_widget.get().strip().upper()
+    n = entrada_widget.get().strip()
     return n if n else "VISITANTE UCABISTA"
+
 
 def abrir_ventana_apensar():
     n = nombre_usuario()
@@ -532,6 +547,7 @@ def abrir_ventana_apensar():
     Label(v, text="¡Bienvenido al juego de Apensar,", font=("Arial", 16, "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK).pack(pady=(40, 4))
     Label(v, text=n, font=("Arial", 16, "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK).pack(pady=(0, 20))
     Button(v, text="Cerrar", command=v.destroy, bg=TEXT_DARK, fg=TEXT_LIGHT, font=("Arial", 11, "bold"), padx=12, pady=6).pack(pady=8)
+
 
 def abrir_ventana_trivia():
     n = nombre_usuario()
@@ -549,6 +565,7 @@ def abrir_ventana_trivia():
 
     Button(welcome_win, text="Empezar el juego", command=iniciar_juego, bg=UCAB_YELLOW, fg=TEXT_DARK, font=("Arial", 14, "bold"), padx=20, pady=10, cursor="hand2").pack()
 
+
 def abrir_ventana_wordle():
     n = nombre_usuario()
     welcome_win = Toplevel(root)
@@ -561,14 +578,16 @@ def abrir_ventana_wordle():
     def iniciar_juego():
         welcome_win.destroy()
         v = Toplevel(root)
-        iniciar_juego_wordle(v, n)  # Invoca la función secuencial externa
+        WordleUCABApp(v, n)
 
     Button(welcome_win, text="Empezar el juego", command=iniciar_juego, bg=UCAB_YELLOW, fg=TEXT_DARK, font=("Arial", 14, "bold"), padx=20, pady=10, cursor="hand2").pack()
+
 
 def create_text_with_shadow(canvas, x, y, text, font, fill, shadow_color="#000000", offset=(1, 1), tags=()):
     sx, sy = offset
     canvas.create_text(x + sx, y + sy, text=text, font=font, fill=shadow_color, tags=tags)
     return canvas.create_text(x, y, text=text, font=font, fill=fill, tags=tags)
+
 
 def actualizar_fondo_cover():
     global bg_photo
@@ -594,6 +613,7 @@ def actualizar_fondo_cover():
     else:
         main_canvas.bg_id = main_canvas.create_image(0, 0, image=bg_photo, anchor="nw")
         main_canvas.tag_lower(main_canvas.bg_id)
+
 
 def dibujar_ui():
     main_canvas.delete("ui")
@@ -662,18 +682,22 @@ def dibujar_ui():
     for item in (rect, txt):
         main_canvas.tag_bind(item, "<Button-1>", lambda e: salir_click())
 
+
 def reposicionar_widgets():
     actualizar_fondo_cover()
     dibujar_ui()
 
+
 darkness_factor = 0.45
 resize_timer = None
+
 
 def on_configure(event):
     global resize_timer
     if resize_timer is not None:
         root.after_cancel(resize_timer)
     resize_timer = root.after(100, reposicionar_widgets)
+
 
 root.bind("<Configure>", on_configure)
 root.after(100, reposicionar_widgets)
