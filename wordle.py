@@ -165,7 +165,7 @@ def mostrar_felicitaciones_wordle():
     
     nombre_jugador = nombre_usuario()
     canvas_wordle.create_text(center_x, int(canvas_h * 0.35), text=f"¡Felicidades {nombre_jugador}! 🎉", font=('Arial', max(18, int(min(canvas_w, canvas_h) * 0.03)), 'bold'), fill=UCAB_YELLOW, tags=("juego",))
-    canvas_wordle.create_text(center_x, int(canvas_h * 0.48), text="¡Adivinaste 4 palabras!\n¡Has completado el desafío! 🦇", font=('Arial', max(13, int(min(canvas_w, canvas_h) * 0.02)), 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
+    canvas_wordle.create_text(center_x, int(canvas_h * 0.48), text="¡Adivinaste 4 palabras!\n¡Has completado el desafío!S", font=('Arial', max(13, int(min(canvas_w, canvas_h) * 0.02)), 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
     
     boton_cerrar = Button(canvas_wordle, text="CERRAR JUEGO 🚀", font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), bg=UCAB_GREEN, fg=TEXT_LIGHT, bd=0, padx=15, pady=8, command=v_wordle.destroy)
     canvas_wordle.create_window(center_x, int(canvas_h * 0.67), window=boton_cerrar, tags=("juego",))
