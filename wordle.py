@@ -275,9 +275,10 @@ def actualizar_fondo_cover():
 # ---------------- Configuración Ventana Principal ----------------
 root = Tk()
 root.title("El Ucabista - Desafío Digital")
-root.geometry("960x640")
+root.attributes("-fullscreen", True)
 root.minsize(640, 420)
 root.resizable(True, True)
+root.bind("<Escape>", lambda event: root.attributes("-fullscreen", False))
 
 main_canvas = Canvas(root, highlightthickness=0)
 main_canvas.pack(fill="both", expand=True)
