@@ -33,7 +33,7 @@ TEXT_DARK = "#131514"
 TEXT_LIGHT = "#ffffff"
 HOVER_FACTOR = 0.92
 
-FONDO_RUTA = "fondo.ucab.png"
+FONDO_RUTA = "images_aulas_ucab.jpeg"
 
 # ====================================================================================
 # LÓGICA E INTERFAZ DE JUEGO DE WORDLE
