@@ -127,20 +127,23 @@ def prisma_points(xc, yc, w, h):
 # ====================================================================================
 # LÓGICA E INTERFAZ DE JUEGO DE WORDLE
 # ====================================================================================
+
 def inicializar_interfaz_juego():
-    global palabra_secreta, intento_actual, cuadros_grid, letras_escritas, largo, frame_grid, canvas_wordle, text_feedback_id
+    global palabra_secreta, intento_actual, cuadros_grid, letras_escritas, largo, frame_grid, canvas_wordle, text_feedback_id, palabras_restantes
     
     if not canvas_wordle or not v_wordle:
         return
 
+    # Usar update para forzar lectura real de dimensiones en pantalla completa
     v_wordle.update()
     canvas_w = max(1, canvas_wordle.winfo_width())
     canvas_h = max(1, canvas_wordle.winfo_height())
     center_x = canvas_w / 2
 
+    # Limpiar elementos previos del canvas
     canvas_wordle.delete("juego")
-
-    #Lógica para evitar que las palabras se repitan
+    
+    # Lógica para evitar que las palabras se repitan
     if not palabras_restantes:
         palabras_restantes = palabras.copy()
         random.shuffle(palabras_restantes)
@@ -151,14 +154,17 @@ def inicializar_interfaz_juego():
     largo = len(palabra_secreta)
     letras_escritas = []
 
+    # Ajuste de tamaño del encabezado verde (altura mínima garantizada de 90)
     header_w = min(canvas_w * 0.78, 760)
     header_h = max(90, int(canvas_h * 0.13)) 
     header_x0 = int(center_x - header_w / 2)
     header_y0 = int(canvas_h * 0.03)
     header_y1 = header_y0 + header_h
 
+    # 1. ENCABEZADO INSTITUCIONAL DE JUEGO
     canvas_wordle.create_rectangle(header_x0, header_y0, header_x0 + header_w, header_y1, fill=UCAB_GREEN, outline=UCAB_YELLOW, width=max(2, int(canvas_w * 0.003)), tags=("juego",))
     
+    # Calculamos las posiciones relativas a la altura del cuadro verde para que no choquen los textos
     y_titulo = header_y0 + (header_h * 0.35)
     y_subtitulo = header_y0 + (header_h * 0.75)
     
@@ -168,9 +174,12 @@ def inicializar_interfaz_juego():
     info_text = f"Jugador: {nombre_jugador}         |         Palabras: {palabras_adivinadas}/4"
     canvas_wordle.create_text(center_x, y_subtitulo, text=info_text, font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), fill=TEXT_LIGHT, tags=("juego",))
 
+    # 2. CONTENEDOR CENTRAL SEMITRANSPARENTE OSCURO (EN CASCADA)
     panel_w = min(canvas_w * 0.82, 720)
     panel_h = min(canvas_h * 0.62, 520)
     panel_x0 = int(center_x - panel_w / 2)
+    
+    # Forzamos a que empiece DESPUÉS del encabezado verde
     panel_y0 = header_y1 + max(10, int(canvas_h * 0.02))
     panel_x1 = panel_x0 + panel_w
     panel_y1 = panel_y0 + panel_h
@@ -179,7 +188,10 @@ def inicializar_interfaz_juego():
     canvas_wordle.overlay_blur_tk = ImageTk.PhotoImage(overlay_blur)
     canvas_wordle.create_image(center_x, panel_y0 + panel_h / 2, image=canvas_wordle.overlay_blur_tk, anchor="center", tags=("juego",))
 
+    # 3. MARCO DE LA CUADRÍCULA
     frame_grid = Frame(canvas_wordle, bg='#1a1a1a')
+    
+    # Lo centramos con base en el panel oscuro
     canvas_wordle.create_window(center_x, panel_y0 + (panel_h * 0.42), window=frame_grid, tags=("juego",))
     
     cuadros_grid = []
@@ -195,12 +207,18 @@ def inicializar_interfaz_juego():
             fila_cuadros.append(lbl)
         cuadros_grid.append(fila_cuadros)
 
+    # 4. FEEDBACK EN TEXTO NATIVO DEL CANVAS
     instrucciones = f"Usa tu teclado para escribir la palabra de {largo} letras"
+    
+    # Colocamos las instrucciones dentro y en la parte inferior del panel oscuro
     text_feedback_id = canvas_wordle.create_text(center_x, panel_y0 + (panel_h * 0.88), text=instrucciones, font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.018)), 'italic', 'bold'), fill=TEXT_LIGHT, tags=("juego",))
 
+    # 5. BOTÓN SALIR DEL JUEGO
     btn_salir = Button(canvas_wordle, text="Salir del Juego", font=('Arial', max(10, int(min(canvas_w, canvas_h) * 0.014)), 'bold'), 
                        bg='#D93843', fg=TEXT_LIGHT, activebackground='#A6242B', bd=0,
                        padx=20, pady=6, cursor="hand2", command=v_wordle.destroy)
+                       
+    # Se ubica justo por debajo de donde termina el panel oscuro
     canvas_wordle.create_window(center_x, panel_y1 + max(20, int(canvas_h * 0.04)), window=btn_salir, tags=("juego",))
 
     v_wordle.bind("<Key>", presionar_tecla)
@@ -219,10 +237,13 @@ def mostrar_boton_siguiente(texto_boton):
                              bg=UCAB_YELLOW, fg=TEXT_DARK, activebackground='#dca61d', bd=0,
                              padx=15, pady=8, command=inicializar_interfaz_juego)
                              
+    # Buscamos las coordenadas exactas del texto de feedback
     if text_feedback_id:
         coords = canvas_wordle.coords(text_feedback_id)
+        # Colocamos el botón un poco más arriba del texto para que respiren
         pos_y = coords[1] - max(40, int(canvas_h * 0.06))
     else:
+        # Respaldo por si el texto no existe por alguna razón
         pos_y = int(canvas_h * 0.70)
         
     canvas_wordle.create_window(canvas_w / 2, pos_y, window=boton_siguiente, tags=("juego",))
@@ -305,6 +326,7 @@ def presionar_tecla(event):
             actualizar_feedback(f"Se acabaron los intentos. Era: {palabra_secreta} 😢", "#D93843")
             mostrar_boton_siguiente("INTENTAR DE NUEVO 🔄")
             return
+
 
 def abrir_ventana_wordle():
     global v_wordle, palabras_adivinadas, canvas_wordle, bg_wordle_photo

@@ -404,6 +404,9 @@ def abrir_ventana_trivia():
            bg=UCAB_YELLOW, fg=TEXT_DARK, font=("Arial", 14, "bold"), 
            padx=20, pady=10, cursor="hand2").pack()
 # --------------------------------------------------------------------------------
+#    WORDLE UCAB
+# --------------------------------------------------------------------------------
+
 
 def abrir_ventana_wordle():
     n = nombre_usuario()
@@ -421,6 +424,8 @@ def create_text_with_shadow(canvas, x, y, text, font, fill, shadow_color="#00000
     sx, sy = offset
     canvas.create_text(x + sx, y + sy, text=text, font=font, fill=shadow_color, tags=tags)
     return canvas.create_text(x, y, text=text, font=font, fill=fill, tags=tags)
+
+
 
 # ---------------- Dibujado principal ----------------
 def dibujar_ui():
