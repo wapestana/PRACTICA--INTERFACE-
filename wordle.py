@@ -159,23 +159,20 @@ def mostrar_boton_siguiente(texto_boton):
     canvas_wordle.create_window(canvas_w / 2, pos_y, window=boton_siguiente, tags=("juego",))
 
 def mostrar_felicitaciones_wordle():
-    canvas_wordle.delete("juego")
+    # Desvinculamos las teclas para que no pueda seguir escribiendo
     v_wordle.unbind("<Key>")
-
-    canvas_w = max(1, canvas_wordle.winfo_width())
-    canvas_h = max(1, canvas_wordle.winfo_height())
-    center_x = canvas_w / 2
     
-    overlay_win = Image.new("RGBA", (max(2, int(canvas_w * 0.70)), max(2, int(canvas_h * 0.55))), (0, 0, 0, 190))
-    canvas_wordle.overlay_win_tk = ImageTk.PhotoImage(overlay_win)
-    canvas_wordle.create_image(center_x, canvas_h / 2, image=canvas_wordle.overlay_win_tk, anchor="center", tags=("juego",))
-    
+    # Obtenemos el nombre del jugador
     nombre_jugador = nombre_usuario()
-    canvas_wordle.create_text(center_x, int(canvas_h * 0.35), text=f"¡Felicidades {nombre_jugador}! 🎉", font=('Arial', max(18, int(min(canvas_w, canvas_h) * 0.03)), 'bold'), fill=UCAB_YELLOW, tags=("juego",))
-    canvas_wordle.create_text(center_x, int(canvas_h * 0.48), text="¡Adivinaste 4 palabras!\n¡Has completado el desafío! 🦇", font=('Arial', max(13, int(min(canvas_w, canvas_h) * 0.02)), 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
     
-    boton_cerrar = Button(canvas_wordle, text="CERRAR JUEGO 🚀", font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), bg=UCAB_GREEN, fg=TEXT_LIGHT, bd=0, padx=15, pady=8, command=v_wordle.destroy)
-    canvas_wordle.create_window(center_x, int(canvas_h * 0.67), window=boton_cerrar, tags=("juego",))
+    # Creamos el mensaje con el formato que pediste (adaptado a Wordle)
+    mensaje = f"🎓 ¡Felicidades {nombre_jugador}! Has completado el Wordle UCAB con éxito."
+    
+    # Mostramos la ventana emergente sobre la ventana del juego (parent=v_wordle)
+    messagebox.showinfo("¡Felicidades!", mensaje, parent=v_wordle)
+    
+    # Una vez que el usuario presione "Aceptar" en el mensaje, cerramos el juego
+    v_wordle.destroy()
 
 def presionar_tecla(event):
     global intento_actual, letras_escritas, palabras_adivinadas
