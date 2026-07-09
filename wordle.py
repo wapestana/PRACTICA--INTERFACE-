@@ -40,6 +40,15 @@ FONDO_RUTA = "fondo.ucab.png"
 def inicializar_interfaz_juego():
     global palabra_secreta, intento_actual, cuadros_grid, letras_escritas, largo, frame_grid, canvas_wordle, text_feedback_id
     
+    if not canvas_wordle or not v_wordle:
+        return
+
+    # CORRECCIÓN: Forzar actualización real para leer las dimensiones del monitor en pantalla completa
+    v_wordle.update()
+    canvas_w = max(1, canvas_wordle.winfo_width())
+    canvas_h = max(1, canvas_wordle.winfo_height())
+    center_x = canvas_w / 2
+
     # Limpiar elementos previos del canvas
     canvas_wordle.delete("juego")
     
@@ -47,43 +56,58 @@ def inicializar_interfaz_juego():
     intento_actual = 0
     largo = len(palabra_secreta)
     letras_escritas = []
-    
-    # 1. ENCABEZADO INSTITUCIONAL DE JUEGO (Caja Verde con bordes amarillos superior)
-    canvas_wordle.create_rectangle(120, 20, 580, 110, fill=UCAB_GREEN, outline=UCAB_YELLOW, width=3, tags=("juego",))
-    canvas_wordle.create_text(350, 50, text="WORDLE UCAB 🎓", font=('Arial', 22, 'bold'), fill=UCAB_YELLOW, tags=("juego",))
+
+    header_w = min(canvas_w * 0.78, 760)
+    header_h = max(70, int(canvas_h * 0.13))
+    header_x0 = int(center_x - header_w / 2)
+    header_y0 = int(canvas_h * 0.03)
+    header_y1 = header_y0 + header_h
+
+    # 1. ENCABEZADO INSTITUCIONAL DE JUEGO
+    canvas_wordle.create_rectangle(header_x0, header_y0, header_x0 + header_w, header_y1, fill=UCAB_GREEN, outline=UCAB_YELLOW, width=max(2, int(canvas_w * 0.003)), tags=("juego",))
+    canvas_wordle.create_text(center_x, int((header_y0 + header_y1) / 2) - 4, text="WORDLE UCAB 🎓", font=('Arial', max(18, int(min(canvas_w, canvas_h) * 0.03)), 'bold'), fill=UCAB_YELLOW, tags=("juego",))
     
     nombre_jugador = nombre_usuario()
     info_text = f"Jugador: {nombre_jugador}         |         Palabras: {palabras_adivinadas}/4"
-    canvas_wordle.create_text(350, 90, text=info_text, font=('Arial', 12, 'bold'), fill=TEXT_LIGHT, tags=("juego",))
+    canvas_wordle.create_text(center_x, int(canvas_h * 0.11), text=info_text, font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), fill=TEXT_LIGHT, tags=("juego",))
 
     # 2. CONTENEDOR CENTRAL SEMITRANSPARENTE OSCURO
-    overlay_blur = Image.new("RGBA", (500, 420), (0, 0, 0, 160))
+    panel_w = min(canvas_w * 0.82, 720)
+    panel_h = min(canvas_h * 0.62, 520)
+    panel_x0 = int(center_x - panel_w / 2)
+    panel_y0 = int(canvas_h * 0.16)
+    panel_x1 = panel_x0 + panel_w
+    panel_y1 = panel_y0 + panel_h
+    overlay_blur = Image.new("RGBA", (max(2, int(panel_w)), max(2, int(panel_h))), (0, 0, 0, 170))
     canvas_wordle.overlay_blur_tk = ImageTk.PhotoImage(overlay_blur)
-    canvas_wordle.create_image(350, 340, image=canvas_wordle.overlay_blur_tk, anchor="center", tags=("juego",))
+    canvas_wordle.create_image(center_x, panel_y0 + panel_h / 2, image=canvas_wordle.overlay_blur_tk, anchor="center", tags=("juego",))
 
-    # 3. MARCO DE LA CUADRÍCULA (Corregido el Parent a canvas_wordle para evitar fallos de jerarquía)
+    # 3. MARCO DE LA CUADRÍCULA
     frame_grid = Frame(canvas_wordle, bg='#1a1a1a')
-    canvas_wordle.create_window(350, 290, window=frame_grid, tags=("juego",))
+    canvas_wordle.create_window(center_x, int(canvas_h * 0.44), window=frame_grid, tags=("juego",))
     
     cuadros_grid = []
+    font_size = max(16, int(min(canvas_w, canvas_h) * 0.025))
+    padx_value = max(3, int(min(canvas_w, canvas_h) * 0.007))
+    pady_value = max(3, int(min(canvas_w, canvas_h) * 0.007))
     for fila in range(6):
         fila_cuadros = []
         for col in range(largo):
-            lbl = Label(frame_grid, text="", font=('Comic Sans MS', 16, 'bold'), width=4, height=1, 
+            lbl = Label(frame_grid, text="", font=('Comic Sans MS', font_size, 'bold'), width=4, height=1, 
                         bd=2, relief="solid", bg="white", fg="black")
-            lbl.grid(row=fila, column=col, padx=4, pady=4)
+            lbl.grid(row=fila, column=col, padx=padx_value, pady=pady_value)
             fila_cuadros.append(lbl)
         cuadros_grid.append(fila_cuadros)
 
-    # 4. FEEDBACK EN TEXTO NATIVO DEL CANVAS (Evita superposiciones raras de Labels)
+    # 4. FEEDBACK EN TEXTO NATIVO DEL CANVAS
     instrucciones = f"Usa tu teclado para escribir la palabra de {largo} letras"
-    text_feedback_id = canvas_wordle.create_text(350, 480, text=instrucciones, font=('Arial', 12, 'italic', 'bold'), fill=TEXT_LIGHT, tags=("juego",))
+    text_feedback_id = canvas_wordle.create_text(center_x, int(canvas_h * 0.77), text=instrucciones, font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.018)), 'italic', 'bold'), fill=TEXT_LIGHT, tags=("juego",))
 
     # 5. BOTÓN SALIR DEL JUEGO
-    btn_salir = Button(canvas_wordle, text="Salir del Juego", font=('Arial', 11, 'bold'), 
+    btn_salir = Button(canvas_wordle, text="Salir del Juego", font=('Arial', max(10, int(min(canvas_w, canvas_h) * 0.014)), 'bold'), 
                        bg='#D93843', fg=TEXT_LIGHT, activebackground='#A6242B', bd=0,
                        padx=20, pady=6, cursor="hand2", command=v_wordle.destroy)
-    canvas_wordle.create_window(350, 585, window=btn_salir, tags=("juego",))
+    canvas_wordle.create_window(center_x, int(canvas_h * 0.90), window=btn_salir, tags=("juego",))
 
     v_wordle.bind("<Key>", presionar_tecla)
 
@@ -94,25 +118,31 @@ def actualizar_feedback(texto, color):
 
 def mostrar_boton_siguiente(texto_boton):
     v_wordle.unbind("<Key>")
-    boton_siguiente = Button(canvas_wordle, text=texto_boton, font=('Arial', 12, 'bold'), 
+    canvas_w = max(1, canvas_wordle.winfo_width())
+    canvas_h = max(1, canvas_wordle.winfo_height())
+    boton_siguiente = Button(canvas_wordle, text=texto_boton, font=('Arial', max(10, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), 
                              bg=UCAB_YELLOW, fg=TEXT_DARK, activebackground='#dca61d', bd=0,
                              padx=15, pady=8, command=inicializar_interfaz_juego)
-    canvas_wordle.create_window(350, 435, window=boton_siguiente, tags=("juego",))
+    canvas_wordle.create_window(canvas_w / 2, int(canvas_h * 0.70), window=boton_siguiente, tags=("juego",))
 
 def mostrar_felicitaciones_wordle():
     canvas_wordle.delete("juego")
     v_wordle.unbind("<Key>")
+
+    canvas_w = max(1, canvas_wordle.winfo_width())
+    canvas_h = max(1, canvas_wordle.winfo_height())
+    center_x = canvas_w / 2
     
-    overlay_win = Image.new("RGBA", (500, 350), (0, 0, 0, 190))
+    overlay_win = Image.new("RGBA", (max(2, int(canvas_w * 0.70)), max(2, int(canvas_h * 0.55))), (0, 0, 0, 190))
     canvas_wordle.overlay_win_tk = ImageTk.PhotoImage(overlay_win)
-    canvas_wordle.create_image(350, 320, image=canvas_wordle.overlay_win_tk, anchor="center", tags=("juego",))
+    canvas_wordle.create_image(center_x, canvas_h / 2, image=canvas_wordle.overlay_win_tk, anchor="center", tags=("juego",))
     
     nombre_jugador = nombre_usuario()
-    canvas_wordle.create_text(350, 220, text=f"¡Felicidades {nombre_jugador}! 🎉", font=('Arial', 22, 'bold'), fill=UCAB_YELLOW, tags=("juego",))
-    canvas_wordle.create_text(350, 290, text="¡Adivinaste 4 palabras!\n¡Has completado el desafío! 🦇", font=('Arial', 15, 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
+    canvas_wordle.create_text(center_x, int(canvas_h * 0.35), text=f"¡Felicidades {nombre_jugador}! 🎉", font=('Arial', max(18, int(min(canvas_w, canvas_h) * 0.03)), 'bold'), fill=UCAB_YELLOW, tags=("juego",))
+    canvas_wordle.create_text(center_x, int(canvas_h * 0.48), text="¡Adivinaste 4 palabras!\n¡Has completado el desafío! 🦇", font=('Arial', max(13, int(min(canvas_w, canvas_h) * 0.02)), 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
     
-    boton_cerrar = Button(canvas_wordle, text="CERRAR JUEGO 🚀", font=('Arial', 12, 'bold'), bg=UCAB_GREEN, fg=TEXT_LIGHT, bd=0, padx=15, pady=8, command=v_wordle.destroy)
-    canvas_wordle.create_window(350, 390, window=boton_cerrar, tags=("juego",))
+    boton_cerrar = Button(canvas_wordle, text="CERRAR JUEGO 🚀", font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), bg=UCAB_GREEN, fg=TEXT_LIGHT, bd=0, padx=15, pady=8, command=v_wordle.destroy)
+    canvas_wordle.create_window(center_x, int(canvas_h * 0.67), window=boton_cerrar, tags=("juego",))
 
 def presionar_tecla(event):
     global intento_actual, letras_escritas, palabras_adivinadas
@@ -223,14 +253,23 @@ def abrir_ventana_wordle():
         
         v_wordle = Toplevel(root)   
         v_wordle.title("Wordle UCAB v1.0")
-        v_wordle.geometry("700x640")
-        v_wordle.resizable(False, False)
         
-        canvas_wordle = Canvas(v_wordle, width=700, height=640, highlightthickness=0)
+        # CORRECCIÓN CLAVE: Pasamos al frente la ventana y activamos pantalla completa
+        # Se elimina por completo la línea de resizable que causaba el conflicto en Windows.
+        v_wordle.focus_force()
+        v_wordle.attributes("-fullscreen", True)
+        v_wordle.bind("<Escape>", lambda event: v_wordle.attributes("-fullscreen", False))
+        
+        canvas_wordle = Canvas(v_wordle, highlightthickness=0)
         canvas_wordle.pack(fill="both", expand=True)
         
+        # Sincronizamos la ventana para heredar las propiedades del monitor completo
+        v_wordle.update()
+        
         if fondo_pil:
-            img_resized = fondo_pil.resize((700, 640), Image.Resampling.LANCZOS)
+            canvas_w = max(1, canvas_wordle.winfo_width())
+            canvas_h = max(1, canvas_wordle.winfo_height())
+            img_resized = fondo_pil.resize((canvas_w, canvas_h), Image.Resampling.LANCZOS)
             img_dark = aplicar_oscurecimiento(img_resized, 0.45)
             bg_wordle_photo = ImageTk.PhotoImage(img_dark)
             canvas_wordle.create_image(0, 0, image=bg_wordle_photo, anchor="nw")
