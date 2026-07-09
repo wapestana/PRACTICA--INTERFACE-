@@ -223,7 +223,8 @@ def abrir_ventana_wordle():
         
         v_wordle = Toplevel(root)   
         v_wordle.title("Wordle UCAB v1.0")
-        v_wordle.geometry("700x640")
+        v_wordle.attributes("-fullscreen", True)
+        v_wordle.bind("<Escape>", lambda event: v_wordle.attributes("-fullscreen", False))
         v_wordle.resizable(False, False)
         
         canvas_wordle = Canvas(v_wordle, width=700, height=640, highlightthickness=0)
@@ -275,10 +276,9 @@ def actualizar_fondo_cover():
 # ---------------- Configuración Ventana Principal ----------------
 root = Tk()
 root.title("El Ucabista - Desafío Digital")
-root.attributes("-fullscreen", True)
+root.geometry("960x640")
 root.minsize(640, 420)
 root.resizable(True, True)
-root.bind("<Escape>", lambda event: root.attributes("-fullscreen", False))
 
 main_canvas = Canvas(root, highlightthickness=0)
 main_canvas.pack(fill="both", expand=True)
