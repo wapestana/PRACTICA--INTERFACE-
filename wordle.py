@@ -9,6 +9,7 @@ import random
 # VARIABLES GLOBALES PARA EL WORDLE
 # ====================================================================================
 palabras = ['UCAB', 'AULAS', 'NESTEA', 'FERIA', 'LOBOS', 'ANDRES', 'BELLO']
+palabras_restantes = []  # Lista para controlar las palabras que no han salido
 palabras_adivinadas = 0
 palabra_secreta = ""
 intento_actual = 0
@@ -38,7 +39,7 @@ FONDO_RUTA = "fondo.ucab.png"
 # LÓGICA E INTERFAZ DE JUEGO DE WORDLE
 # ====================================================================================
 def inicializar_interfaz_juego():
-    global palabra_secreta, intento_actual, cuadros_grid, letras_escritas, largo, frame_grid, canvas_wordle, text_feedback_id
+    global palabra_secreta, intento_actual, cuadros_grid, letras_escritas, largo, frame_grid, canvas_wordle, text_feedback_id, palabras_restantes
     
     if not canvas_wordle or not v_wordle:
         return
@@ -52,7 +53,13 @@ def inicializar_interfaz_juego():
     # Limpiar elementos previos del canvas
     canvas_wordle.delete("juego")
     
-    palabra_secreta = random.choice(palabras)
+    # Lógica para evitar que las palabras se repitan
+    if not palabras_restantes:
+        palabras_restantes = palabras.copy()
+        random.shuffle(palabras_restantes)
+        
+    palabra_secreta = palabras_restantes.pop()
+    
     intento_actual = 0
     largo = len(palabra_secreta)
     letras_escritas = []
@@ -165,7 +172,7 @@ def mostrar_felicitaciones_wordle():
     
     nombre_jugador = nombre_usuario()
     canvas_wordle.create_text(center_x, int(canvas_h * 0.35), text=f"¡Felicidades {nombre_jugador}! 🎉", font=('Arial', max(18, int(min(canvas_w, canvas_h) * 0.03)), 'bold'), fill=UCAB_YELLOW, tags=("juego",))
-    canvas_wordle.create_text(center_x, int(canvas_h * 0.48), text="¡Adivinaste 4 palabras!\n¡Has completado el desafío!S", font=('Arial', max(13, int(min(canvas_w, canvas_h) * 0.02)), 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
+    canvas_wordle.create_text(center_x, int(canvas_h * 0.48), text="¡Adivinaste 4 palabras!\n¡Has completado el desafío! 🦇", font=('Arial', max(13, int(min(canvas_w, canvas_h) * 0.02)), 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
     
     boton_cerrar = Button(canvas_wordle, text="CERRAR JUEGO 🚀", font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), bg=UCAB_GREEN, fg=TEXT_LIGHT, bd=0, padx=15, pady=8, command=v_wordle.destroy)
     canvas_wordle.create_window(center_x, int(canvas_h * 0.67), window=boton_cerrar, tags=("juego",))
@@ -260,9 +267,10 @@ def aplicar_oscurecimiento(img_pil, factor):
 
 # ----------------- FLUJO DE BIENVENIDA Y JUEGO DE WORDLE -----------------
 def abrir_ventana_wordle():
-    global v_wordle, palabras_adivinadas, canvas_wordle, bg_wordle_photo
+    global v_wordle, palabras_adivinadas, canvas_wordle, bg_wordle_photo, palabras_restantes
     n = nombre_usuario()
     palabras_adivinadas = 0  
+    palabras_restantes = [] # Reiniciar palabras al abrir la ventana por primera vez
     
     welcome_win = Toplevel(root)
     welcome_win.title("Bienvenida - Wordle UCAB")
