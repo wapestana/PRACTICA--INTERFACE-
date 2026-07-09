@@ -9,7 +9,6 @@ import random
 # VARIABLES GLOBALES PARA EL WORDLE
 # ====================================================================================
 palabras = ['UCAB', 'AULAS', 'NESTEA', 'FERIA', 'LOBOS', 'ANDRES', 'BELLO']
-palabras_restantes = []  # Lista para controlar las palabras que no han salido
 palabras_adivinadas = 0
 palabra_secreta = ""
 intento_actual = 0
@@ -33,13 +32,13 @@ TEXT_DARK = "#131514"
 TEXT_LIGHT = "#ffffff"
 HOVER_FACTOR = 0.92
 
-FONDO_RUTA = "images_aulas_ucab.jpeg"
+FONDO_RUTA = "fondo.ucab.png"
 
 # ====================================================================================
 # LÓGICA E INTERFAZ DE JUEGO DE WORDLE
 # ====================================================================================
 def inicializar_interfaz_juego():
-    global palabra_secreta, intento_actual, cuadros_grid, letras_escritas, largo, frame_grid, canvas_wordle, text_feedback_id, palabras_restantes
+    global palabra_secreta, intento_actual, cuadros_grid, letras_escritas, largo, frame_grid, canvas_wordle, text_feedback_id
     
     if not canvas_wordle or not v_wordle:
         return
@@ -53,13 +52,7 @@ def inicializar_interfaz_juego():
     # Limpiar elementos previos del canvas
     canvas_wordle.delete("juego")
     
-    # Lógica para evitar que las palabras se repitan
-    if not palabras_restantes:
-        palabras_restantes = palabras.copy()
-        random.shuffle(palabras_restantes)
-        
-    palabra_secreta = palabras_restantes.pop()
-    
+    palabra_secreta = random.choice(palabras)
     intento_actual = 0
     largo = len(palabra_secreta)
     letras_escritas = []
@@ -159,20 +152,23 @@ def mostrar_boton_siguiente(texto_boton):
     canvas_wordle.create_window(canvas_w / 2, pos_y, window=boton_siguiente, tags=("juego",))
 
 def mostrar_felicitaciones_wordle():
-    # Desvinculamos las teclas para que no pueda seguir escribiendo
+    canvas_wordle.delete("juego")
     v_wordle.unbind("<Key>")
+
+    canvas_w = max(1, canvas_wordle.winfo_width())
+    canvas_h = max(1, canvas_wordle.winfo_height())
+    center_x = canvas_w / 2
     
-    # Obtenemos el nombre del jugador
+    overlay_win = Image.new("RGBA", (max(2, int(canvas_w * 0.70)), max(2, int(canvas_h * 0.55))), (0, 0, 0, 190))
+    canvas_wordle.overlay_win_tk = ImageTk.PhotoImage(overlay_win)
+    canvas_wordle.create_image(center_x, canvas_h / 2, image=canvas_wordle.overlay_win_tk, anchor="center", tags=("juego",))
+    
     nombre_jugador = nombre_usuario()
+    canvas_wordle.create_text(center_x, int(canvas_h * 0.35), text=f"¡Felicidades {nombre_jugador}! 🎉", font=('Arial', max(18, int(min(canvas_w, canvas_h) * 0.03)), 'bold'), fill=UCAB_YELLOW, tags=("juego",))
+    canvas_wordle.create_text(center_x, int(canvas_h * 0.48), text="¡Adivinaste 4 palabras!\n¡Has completado el desafío!S", font=('Arial', max(13, int(min(canvas_w, canvas_h) * 0.02)), 'bold'), fill=TEXT_LIGHT, justify="center", tags=("juego",))
     
-    # Creamos el mensaje con el formato que pediste (adaptado a Wordle)
-    mensaje = f"🎓 ¡Felicidades {nombre_jugador}! Has completado el Wordle UCAB con éxito."
-    
-    # Mostramos la ventana emergente sobre la ventana del juego (parent=v_wordle)
-    messagebox.showinfo("¡Felicidades!", mensaje, parent=v_wordle)
-    
-    # Una vez que el usuario presione "Aceptar" en el mensaje, cerramos el juego
-    v_wordle.destroy()
+    boton_cerrar = Button(canvas_wordle, text="CERRAR JUEGO 🚀", font=('Arial', max(11, int(min(canvas_w, canvas_h) * 0.016)), 'bold'), bg=UCAB_GREEN, fg=TEXT_LIGHT, bd=0, padx=15, pady=8, command=v_wordle.destroy)
+    canvas_wordle.create_window(center_x, int(canvas_h * 0.67), window=boton_cerrar, tags=("juego",))
 
 def presionar_tecla(event):
     global intento_actual, letras_escritas, palabras_adivinadas
@@ -264,10 +260,9 @@ def aplicar_oscurecimiento(img_pil, factor):
 
 # ----------------- FLUJO DE BIENVENIDA Y JUEGO DE WORDLE -----------------
 def abrir_ventana_wordle():
-    global v_wordle, palabras_adivinadas, canvas_wordle, bg_wordle_photo, palabras_restantes
+    global v_wordle, palabras_adivinadas, canvas_wordle, bg_wordle_photo
     n = nombre_usuario()
     palabras_adivinadas = 0  
-    palabras_restantes = [] # Reiniciar palabras al abrir la ventana por primera vez
     
     welcome_win = Toplevel(root)
     welcome_win.title("Bienvenida - Wordle UCAB")
