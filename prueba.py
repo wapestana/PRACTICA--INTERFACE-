@@ -306,11 +306,11 @@ def iniciar_juego_wordle(root_padre, player_name):
 
         font_sub = ("Comic Sans MS", max(16, int(min(canvas_w, canvas_h) * 0.028)), "bold")
         canvas.create_text(text_x_center, center_y, 
-                           text="¡Adivinaste 4 palabras!", 
+                           text="¡HAZ COMPLETADO EL DESAFIO!", 
                            font=font_sub, fill="white", anchor="center", tags=("juego_final",))
 
         canvas.create_text(text_x_center, center_y + max(35, int(canvas_h * 0.05)), 
-                           text="¡Has desbloqueado el NIVEL 2! 🦇", 
+                           text="¡Eres un verdadero ucabista! 🎓", 
                            font=font_sub, fill="white", anchor="center", tags=("juego_final",))
 
         # 3. Botón final
