@@ -375,11 +375,11 @@ def iniciar_juego_wordle(v_wordle, player_name):
         # ⚪ Letras configuradas completamente en BLANCO (fill="white")
         canvas.create_text(texto_x, center_y - 60, 
                            text=f"¡Felicidades {player_name}! 🏆", 
-                           font=("Comic Sans MS", 28, "bold"), fill="white")
+                           font=("Comic Sans MS", 38, "bold"), fill="white")
         
         canvas.create_text(texto_x, center_y + 30, 
-                           text="¡HAZ COMPLETADO EL DESAFÍO WORDLE UCAB! 🎉", 
-                           font=("Comic Sans MS", 18, "bold"), fill="white", justify="center")
+                           text="¡HAZ COMPLETADO EL DESAFÍO UCABISTA! 🎉", 
+                           font=("Comic Sans MS", 28, "bold"), fill="white", justify="center")
 
         btn_finalizar = Button(canvas, text="FINALIZAR", 
                                font=("Arial", 12, "bold"), bg="#f04730", fg="black", 
