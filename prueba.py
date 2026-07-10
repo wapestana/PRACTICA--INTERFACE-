@@ -356,17 +356,17 @@ def iniciar_juego_wordle(v_wordle, player_name):
         global trofeo_photo_ref
 
         try:
-            # 🏆 Cargamos y redimensionamos correctamente la imagen del trofeo
-            img_pil = Image.open("trofeo.jpg")
+            #Cargamos la imagen del trofeo
+            img_pil = Image.open("trofeo.png").convert("RGBA")
             alto_deseado = int(canvas_h * 0.6)
             proporcion = alto_deseado / float(img_pil.size[1])
-            ancho_deseado = int(float(img_pil.size[0]) * proporcion) # ¡Corregido el typo aquí!
+            ancho_deseado = int(float(img_pil.size[0]) * proporcion) 
             img_pil = img_pil.resize((ancho_deseado, alto_deseado), Image.Resampling.LANCZOS)
             
             trofeo_photo_ref = ImageTk.PhotoImage(img_pil)
             
             # Ubicamos el trofeo en el panel izquierdo
-            canvas.create_image(ancho_deseado / 2 + 60, center_y, image=trofeo_photo_ref, anchor="center")
+            canvas.create_image(ancho_deseado / 3 + 70, center_y, image=trofeo_photo_ref, anchor="center")
             texto_x = center_x + (canvas_w * 0.15)
         except Exception as e:
             print(f"Error cargando la imagen del trofeo: {e}")
@@ -378,11 +378,11 @@ def iniciar_juego_wordle(v_wordle, player_name):
                            font=("Comic Sans MS", 28, "bold"), fill="white")
         
         canvas.create_text(texto_x, center_y + 30, 
-                           text="¡Adivinaste 4 palabras!\n¡Has desbloqueado el NIVEL 2! 🌟", 
+                           text="¡HAZ COMPLETADO EL DESAFÍO WORDLE UCAB! 🎉", 
                            font=("Comic Sans MS", 18, "bold"), fill="white", justify="center")
 
-        btn_finalizar = Button(canvas, text="IR AL NIVEL 2 🚀", 
-                               font=("Arial", 12, "bold"), bg="#d4f0d0", fg="black", 
+        btn_finalizar = Button(canvas, text="FINALIZAR", 
+                               font=("Arial", 12, "bold"), bg="#f04730", fg="black", 
                                bd=1, padx=20, pady=10, cursor="hand2", command=v_wordle.destroy)
         canvas.create_window(texto_x, center_y + 130, window=btn_finalizar)
 
