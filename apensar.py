@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import *
-from tkinter import messagebox
 from PIL import Image, ImageTk
 import os
 import random
@@ -21,6 +20,40 @@ HOVER_FACTOR = 0.92
 
 FONDO_RUTA = "fondo.ucab.png"
 LOGO_RUTA = "Logo_UCAB.png"
+
+# ====================================================================================
+# BASE DE DATOS DE NIVELES DE APENSAR
+# ====================================================================================
+NIVELES_APENSAR = [
+    {
+        "palabra": "LABORATORIOS",
+        "imagenes": [
+            "laboratoriosucab1.png",
+            "laboratorioucab2.png",
+            "laboratorioucab3.png",
+            "laboratoriosucab.png"
+        ]
+    },
+    {
+        "palabra": "AULAMAGNA",
+        "imagenes": [
+            "aulamagnaucab.png",
+            "aulamagnaucab1.png",
+            "aulamagnaucab2.png",
+            "aulamagnaucab3.png"
+        ]
+    },
+    {
+        "palabra": "FERIA",
+        "imagenes": [
+            "feriaucab.png",
+            "feriaucab1.png",
+            "feriaucab2.png",
+            "feriaucab3.png"
+        ]
+    }
+    # Puedes agregar más niveles aquí siguiendo el mismo formato de arriba
+]
 
 # Función para dibujar rectángulos redondeados
 def create_rounded_rect(canvas, x1, y1, x2, y2, r, **kwargs):
@@ -48,43 +81,46 @@ class ApensarGame:
         self.window.bind("<Key>", self.tecla_presionada)
         
         self.user_name = user_name
-        self.palabra_correcta = "LABORATORIOS"
-        self.longitud = len(self.palabra_correcta)
-        
-        self.slots = [None] * self.longitud        
-        self.slot_sources = [None] * self.longitud 
         self.vidas = 3  
-        self.bloqueado = False # Para evitar que escriban mientras sale un mensaje
+        self.bloqueado = False 
         
-        # ACTUALIZADO A FORMATO PNG
-        self.rutas_imagenes = [
-            "laboratoriosucab1.png",
-            "laboratorioucab2.png",
-            "laboratorioucab3.png",
-            "laboratoriosucab.png"
-        ]
-        self.img_referencias = []
+        # LÓGICA DE MULTINIVEL
+        self.nivel_actual_idx = 0
         
         self.canvas = Canvas(self.window, bg=BG_APENSAR, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         
         self.window.update()
-        self.iniciar_nivel()
+        
+        # Iniciar el primer nivel
+        self.cargar_nivel()
+
+    def cargar_nivel(self):
+        self.canvas.delete("all")
+        
+        datos_nivel = NIVELES_APENSAR[self.nivel_actual_idx]
+        self.palabra_correcta = datos_nivel["palabra"]
+        self.rutas_imagenes = datos_nivel["imagenes"]
+        self.longitud = len(self.palabra_correcta)
+        
+        self.slots = [None] * self.longitud        
+        self.slot_sources = [None] * self.longitud 
+        self.bloqueado = False
+        
+        self.iniciar_nivel_ui()
 
     def dibujar_encabezado_juego(self, W):
         lbl_back = self.canvas.create_text(60, 50, text="< Volver", font=("Arial", 18, "bold"), fill=UCAB_BLUE, tags=("ui", "btn_volver"))
         self.canvas.tag_bind(lbl_back, "<Button-1>", lambda e: self.window.destroy())
         
-        self.canvas.create_text(W/2, 50, text="APENSAR UCAB", font=("Arial", 28, "bold"), fill=UCAB_BLUE, tags="ui")
+        self.canvas.create_text(W/2, 50, text=f"APENSAR UCAB - Nivel {self.nivel_actual_idx + 1}", font=("Arial", 28, "bold"), fill=UCAB_BLUE, tags="ui")
         
-        # Insignia Vidas (Se ajustó la posición para llenar el vacío del "12")
+        # Insignia Vidas
         self.canvas.create_oval(W - 140, 35, W - 105, 70, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
         self.canvas.create_text(W - 122, 53, text="❤", font=("Arial", 18), fill="red", tags="ui")
         self.canvas.create_text(W - 60, 52, text=str(self.vidas), font=("Arial", 20, "bold"), fill=UCAB_BLUE, tags=("ui", "txt_vidas"))
 
-    def iniciar_nivel(self):
-        self.canvas.delete("ui")
-        
+    def iniciar_nivel_ui(self):
         W = self.window.winfo_width()
         H = self.window.winfo_height()
         
@@ -145,11 +181,15 @@ class ApensarGame:
             for item in (box, txt):
                 self.canvas.tag_bind(item, "<Button-1>", lambda e, idx=i: self.remover_letra(idx))
 
-        # TECLADO INFERIOR
+        # TECLADO INFERIOR (14 Teclas garantizadas)
         letras_correctas = list(self.palabra_correcta)
-        distractores = ["M", "U"]
+        letras_faltantes = 14 - len(letras_correctas)
+        abecedario = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        
+        distractores = [random.choice(abecedario) for _ in range(letras_faltantes)]
         self.letras_paleta = letras_correctas + distractores
-        random.seed(42)
+        
+        random.seed() # Para que sea aleatorio cada vez
         random.shuffle(self.letras_paleta)
 
         y_palette_start = y_slots + 90
@@ -224,7 +264,10 @@ class ApensarGame:
     def verificar_resultado(self):
         intento = "".join(self.slots)
         if intento == self.palabra_correcta:
-            self.mostrar_mensaje_in_game("exito", f"¡Excelente {self.user_name}!\nLa respuesta es LABORATORIOS.", auto_cerrar=False)
+            if self.nivel_actual_idx + 1 < len(NIVELES_APENSAR):
+                self.mostrar_mensaje_in_game("exito", f"¡Excelente {self.user_name}!\nLa respuesta es {self.palabra_correcta}.", auto_cerrar=False)
+            else:
+                self.mostrar_mensaje_in_game("victoria", f"¡Felicidades {self.user_name}!\nCompletaste todos los niveles.", auto_cerrar=False)
         else:
             self.vidas -= 1
             self.canvas.itemconfig("txt_vidas", text=str(self.vidas))
@@ -234,33 +277,54 @@ class ApensarGame:
             else:
                 self.mostrar_mensaje_in_game("error", f"Palabra incorrecta.\nTe quedan {self.vidas} vida(s).", auto_cerrar=True)
                 
+    def avanzar_nivel(self):
+        self.nivel_actual_idx += 1
+        self.cargar_nivel()
+                
     # ================= NUEVO SISTEMA DE MENSAJES IN-GAME =================
     def mostrar_mensaje_in_game(self, tipo, texto, auto_cerrar):
         self.bloqueado = True 
         W, H = self.window.winfo_width(), self.window.winfo_height()
         cx, cy = W/2, H/2
-        w_box, h_box = 400, 220
+        w_box, h_box = 420, 240
         
         # Sombra y Cartel Principal
         create_rounded_rect(self.canvas, cx - w_box/2 + 6, cy - h_box/2 + 6, cx + w_box/2 + 6, cy + h_box/2 + 6, 16, fill="#7A9CAE", tags="msg_ui")
         create_rounded_rect(self.canvas, cx - w_box/2, cy - h_box/2, cx + w_box/2, cy + h_box/2, 16, fill=TEXT_LIGHT, tags="msg_ui")
         
-        color_titulo = "#E74C3C" if tipo in ["error", "fin"] else UCAB_GREEN
-        titulo = "¡CORRECTO!" if tipo == "exito" else ("¡FALLASTE!" if tipo == "error" else "FIN DEL JUEGO")
+        if tipo == "exito":
+            color_titulo = UCAB_GREEN
+            titulo = "¡CORRECTO!"
+        elif tipo == "victoria":
+            color_titulo = "#D4A000"
+            titulo = "¡GANASTE!"
+        else:
+            color_titulo = "#E74C3C"
+            titulo = "¡FALLASTE!" if tipo == "error" else "FIN DEL JUEGO"
         
-        self.canvas.create_text(cx, cy - 50, text=titulo, font=("Arial", 26, "bold"), fill=color_titulo, tags="msg_ui")
-        self.canvas.create_text(cx, cy + 5, text=texto, font=("Arial", 16), fill=TEXT_DARK, justify="center", tags="msg_ui")
+        self.canvas.create_text(cx, cy - 50, text=titulo, font=("Arial", 28, "bold"), fill=color_titulo, tags="msg_ui")
+        self.canvas.create_text(cx, cy + 10, text=texto, font=("Arial", 16), fill=TEXT_DARK, justify="center", tags="msg_ui")
         
         if auto_cerrar:
             # Si tiene vidas, se limpia solo después de 1.5 segundos
             self.window.after(1500, self.limpiar_mensaje_y_casillas)
         else:
-            # Si ganó o perdió definitivamente, mostramos botón de salir
-            btn_w, btn_h = 160, 45
-            btn_y = cy + 70
-            create_rounded_rect(self.canvas, cx - btn_w/2, btn_y - btn_h/2, cx + btn_w/2, btn_y + btn_h/2, 8, fill=UCAB_BLUE, tags=("msg_ui", "btn_msg"))
-            self.canvas.create_text(cx, btn_y, text="Continuar", font=("Arial", 14, "bold"), fill=TEXT_LIGHT, tags=("msg_ui", "btn_msg"))
-            self.canvas.tag_bind("btn_msg", "<Button-1>", lambda e: self.window.destroy())
+            # Botón de acción (Continuar / Siguiente Nivel / Salir)
+            btn_w, btn_h = 220, 45
+            btn_y = cy + 75
+            create_rounded_rect(self.canvas, cx - btn_w/2, btn_y - btn_h/2, cx + btn_w/2, btn_y + btn_h/2, 8, fill=UCAB_BLUE, tags=("msg_ui", "btn_msg_bg"))
+            
+            if tipo == "exito":
+                texto_btn = "Siguiente Nivel"
+                cmd = self.avanzar_nivel
+            else:
+                texto_btn = "Terminar"
+                cmd = self.window.destroy
+                
+            self.canvas.create_text(cx, btn_y, text=texto_btn, font=("Arial", 14, "bold"), fill=TEXT_LIGHT, tags=("msg_ui", "btn_msg_txt"))
+            
+            self.canvas.tag_bind("btn_msg_bg", "<Button-1>", lambda e: cmd())
+            self.canvas.tag_bind("btn_msg_txt", "<Button-1>", lambda e: cmd())
 
     def limpiar_mensaje_y_casillas(self):
         self.canvas.delete("msg_ui")
@@ -461,6 +525,20 @@ def dibujar_ui_menu():
     main_canvas.create_text(bx, by, text="Salir de la App :(", fill="white", font=("Arial", 11, "bold"), tags="ui")
     main_canvas.tag_bind(rect, "<Button-1>", lambda e: root.destroy())
 
+# Botón Salir
+    bx, by = W - 98, H - 38
+    
+    # Le agregamos la etiqueta "btn_salir" tanto al rectángulo como al texto
+    main_canvas.create_rectangle(bx - 80, by - 20, bx + 80, by + 20, fill="red", outline="", tags=("ui", "btn_salir"))
+    main_canvas.create_text(bx, by, text="Salir de la App :(", fill="white", font=("Arial", 11, "bold"), tags=("ui", "btn_salir"))
+    
+    # Función para cerrar todo de forma segura
+    def cerrar_todo(event):
+        root.quit()
+        root.destroy()
+        
+    # Asignamos el clic a todo lo que tenga la etiqueta "btn_salir" (fondo y texto)
+    main_canvas.tag_bind("btn_salir", "<Button-1>", cerrar_todo)
 # Inicializar
 root.bind("<Configure>", on_configure)
 root.after(100, reposicionar_widgets)
