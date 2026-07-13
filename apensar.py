@@ -14,7 +14,7 @@ UCAB_BLUE = "#00599C"
 UCAB_GREEN = "#008343"
 TEXT_DARK = "#131514"
 TEXT_LIGHT = "#ffffff"
-BG_APENSAR = "#C1E5F5" # Azul celeste de la nueva referencia
+BG_APENSAR = "#C1E5F5" # Azul celeste
 KEY_BLUE = "#2491D8"   # Azul de las teclas
 KEY_SHADOW = "#145D8F" # Sombra de las teclas
 HOVER_FACTOR = 0.92
@@ -38,10 +38,11 @@ class ApensarGame:
     def __init__(self, parent, user_name):
         self.parent = parent
         self.window = Toplevel(parent)
-        self.window.title(f"Apensar - {user_name} (Nivel 1)")
+        self.window.title("Apensar UCAB")
         
-        self.window.geometry("540x850")
-        self.window.resizable(False, False) 
+        # Activar Pantalla Completa (Maximizada)
+        self.window.state("zoomed") 
+        self.window.configure(bg=BG_APENSAR)
         
         self.user_name = user_name
         self.palabra_correcta = "LABORATORIOS"
@@ -49,8 +50,8 @@ class ApensarGame:
         
         self.slots = [None] * self.longitud        
         self.slot_sources = [None] * self.longitud 
-        self.monedas = 185 # Monedas de la referencia
-        self.nivel = 12    # Nivel de la referencia
+        self.monedas = 185 
+        self.nivel = 12    
         
         self.rutas_imagenes = [
             "laboratoriosucab1.jpg",
@@ -63,43 +64,54 @@ class ApensarGame:
         self.canvas = Canvas(self.window, bg=BG_APENSAR, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         
-        # Iniciar el nivel directamente (saltando la pantalla inicial interna)
+        # Esperar un instante para que la ventana tome el tamaño de la pantalla
+        self.window.update()
         self.iniciar_nivel()
 
-    def dibujar_encabezado_juego(self):
-        W = 540
+    def dibujar_encabezado_juego(self, W):
         # Botón volver (<)
-        lbl_back = self.canvas.create_text(30, 45, text="<", font=("Arial", 28, "bold"), fill=TEXT_LIGHT, tags=("ui", "btn_volver"))
+        lbl_back = self.canvas.create_text(60, 50, text="< Volver", font=("Arial", 18, "bold"), fill=UCAB_BLUE, tags=("ui", "btn_volver"))
         self.canvas.tag_bind(lbl_back, "<Button-1>", lambda e: self.window.destroy())
         
-        # Título APENSAR
-        self.canvas.create_text(115, 45, text="APENSAR", font=("Arial", 18, "bold"), fill=TEXT_LIGHT, tags="ui", anchor="w")
+        # Título APENSAR UCAB
+        self.canvas.create_text(W/2, 50, text="APENSAR UCAB", font=("Arial", 28, "bold"), fill=UCAB_BLUE, tags="ui")
         
-        # Insignia de Nivel (Estrella simulada con círculo amarillo)
-        self.canvas.create_oval(W/2 + 20, 25, W/2 + 65, 70, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
-        self.canvas.create_text(W/2 + 42, 47, text=str(self.nivel), font=("Arial", 18, "bold"), fill=TEXT_LIGHT, tags="ui")
+        # Insignia de Nivel
+        self.canvas.create_oval(W - 250, 30, W - 205, 75, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
+        self.canvas.create_text(W - 227, 52, text=str(self.nivel), font=("Arial", 18, "bold"), fill=TEXT_LIGHT, tags="ui")
 
         # Insignia de Monedas
-        self.canvas.create_oval(W - 130, 30, W - 95, 65, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
-        self.canvas.create_text(W - 112, 47, text="$", font=("Arial", 16, "bold"), fill="#D4A000", tags="ui")
-        self.canvas.create_text(W - 60, 47, text=str(self.monedas), font=("Arial", 18, "bold"), fill=TEXT_LIGHT, tags="ui")
+        self.canvas.create_oval(W - 160, 35, W - 125, 70, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
+        self.canvas.create_text(W - 142, 52, text="$", font=("Arial", 16, "bold"), fill="#D4A000", tags="ui")
+        self.canvas.create_text(W - 80, 52, text=str(self.monedas), font=("Arial", 20, "bold"), fill=UCAB_BLUE, tags="ui")
 
     # ---------------- Pantalla Principal del Nivel ----------------
     def iniciar_nivel(self):
         self.canvas.delete("ui")
-        W, H = 540, 850
+        
+        # Obtener dimensiones reales de la pantalla
+        W = self.window.winfo_width()
+        H = self.window.winfo_height()
+        
+        # Si por alguna razón la ventana no se actualizó, usamos los de la pantalla principal
+        if W <= 1 or H <= 1:
+            W, H = self.window.winfo_screenwidth(), self.window.winfo_screenheight()
+            
         x_center = W / 2
 
-        self.dibujar_encabezado_juego()
+        self.dibujar_encabezado_juego(W)
 
-        # ---------------- IMÁGENES (Estilo 4 fotos 1 bloque) ----------------
-        img_size = 160
-        gap_img = 4
+        # ---------------- IMÁGENES CENTRADAS DINÁMICAMENTE ----------------
+        img_size = 180 # Tamaño de cada cuadrito
+        gap_img = 6
+        
+        # Altura inicial basada en el porcentaje de la pantalla
+        marco_y1 = int(H * 0.15) 
+        marco_y2 = marco_y1 + (img_size * 2) + (gap_img * 2)
+        
         # Marco blanco de fondo que agrupa las 4 imágenes
         marco_x1 = x_center - img_size - gap_img
-        marco_y1 = 120
         marco_x2 = x_center + img_size + gap_img
-        marco_y2 = 120 + (img_size * 2) + (gap_img * 2)
         create_rounded_rect(self.canvas, marco_x1, marco_y1, marco_x2, marco_y2, 12, fill=TEXT_LIGHT, tags="ui")
 
         self.img_referencias = []
@@ -112,13 +124,14 @@ class ApensarGame:
                     img_blank = Image.new("RGBA", (img_size, img_size), (200, 200, 200, 255))
                     self.img_referencias.append(ImageTk.PhotoImage(img_blank))
             except:
-                pass
+                img_blank = Image.new("RGBA", (img_size, img_size), (200, 200, 200, 255))
+                self.img_referencias.append(ImageTk.PhotoImage(img_blank))
 
         coords_imagenes = [
-            (x_center - img_size - gap_img/2, 120 + gap_img/2), 
-            (x_center + gap_img/2, 120 + gap_img/2),
-            (x_center - img_size - gap_img/2, 120 + img_size + gap_img * 1.5), 
-            (x_center + gap_img/2, 120 + img_size + gap_img * 1.5)
+            (x_center - img_size - gap_img/2, marco_y1 + gap_img/2), 
+            (x_center + gap_img/2, marco_y1 + gap_img/2),
+            (x_center - img_size - gap_img/2, marco_y1 + img_size + gap_img * 1.5), 
+            (x_center + gap_img/2, marco_y1 + img_size + gap_img * 1.5)
         ]
         
         for idx, (bx, by) in enumerate(coords_imagenes):
@@ -126,19 +139,20 @@ class ApensarGame:
                 self.canvas.create_image(bx, by, image=self.img_referencias[idx], anchor="nw", tags="ui")
 
         # ---------------- SLOTS (Casillas de letras) ----------------
-        tile_w = 34
-        gap_slots = 6
+        tile_w = 40
+        gap_slots = 8
         total_w_slots = self.longitud * (tile_w + gap_slots) - gap_slots
         start_x_slots = x_center - total_w_slots / 2 + tile_w / 2
-        y_slots = 520
+        
+        # Ubicados justo debajo del marco de imágenes
+        y_slots = marco_y2 + 60 
 
         for i in range(self.longitud):
             sx = start_x_slots + i * (tile_w + gap_slots)
             
-            # Sombra gris sutil y cuadro blanco
-            create_rounded_rect(self.canvas, sx - tile_w/2, y_slots - tile_w/2, sx + tile_w/2, y_slots + tile_w/2 + 2, 4, fill="#A5C1D1", tags=("ui", f"slot_bg_{i}"))
-            box = create_rounded_rect(self.canvas, sx - tile_w/2, y_slots - tile_w/2, sx + tile_w/2, y_slots + tile_w/2, 4, fill=TEXT_LIGHT, tags=("ui", f"slot_box_{i}"))
-            txt = self.canvas.create_text(sx, y_slots, text="", font=("Arial", 18, "bold"), fill=TEXT_DARK, tags=("ui", f"slot_txt_{i}"))
+            create_rounded_rect(self.canvas, sx - tile_w/2, y_slots - tile_w/2, sx + tile_w/2, y_slots + tile_w/2 + 3, 6, fill="#A5C1D1", tags=("ui", f"slot_bg_{i}"))
+            box = create_rounded_rect(self.canvas, sx - tile_w/2, y_slots - tile_w/2, sx + tile_w/2, y_slots + tile_w/2, 6, fill=TEXT_LIGHT, tags=("ui", f"slot_box_{i}"))
+            txt = self.canvas.create_text(sx, y_slots, text="", font=("Arial", 22, "bold"), fill=TEXT_DARK, tags=("ui", f"slot_txt_{i}"))
             
             for item in (box, txt):
                 self.canvas.tag_bind(item, "<Button-1>", lambda e, idx=i: self.remover_letra(idx))
@@ -150,23 +164,22 @@ class ApensarGame:
         random.seed(42)
         random.shuffle(self.letras_paleta)
 
-        y_palette_start = 620
-        key_w = 26
-        key_h = 28
+        # Ubicado justo debajo de las casillas
+        y_palette_start = y_slots + 90
+        key_w = 30
+        key_h = 32
         self.palette_items = []
         
         for idx, letra in enumerate(self.letras_paleta):
             row = idx // 7
             col = idx % 7
-            # Centrado de las 7 teclas
-            px = x_center - 195 + col * 65
-            py = y_palette_start + row * 70
             
-            # Sombra oscura (Efecto 3D)
-            p_shadow = create_rounded_rect(self.canvas, px-key_w, py-key_h, px+key_w, py+key_h+6, 8, fill=KEY_SHADOW, tags=("ui", f"pal_sh_{idx}"))
-            # Botón azul principal
+            px = x_center - 225 + col * 75
+            py = y_palette_start + row * 80
+            
+            p_shadow = create_rounded_rect(self.canvas, px-key_w, py-key_h, px+key_w, py+key_h+8, 8, fill=KEY_SHADOW, tags=("ui", f"pal_sh_{idx}"))
             p_box = create_rounded_rect(self.canvas, px-key_w, py-key_h, px+key_w, py+key_h, 8, fill=KEY_BLUE, tags=("ui", f"pal_box_{idx}"))
-            p_txt = self.canvas.create_text(px, py, text=letra, font=("Arial", 26, "bold"), fill=TEXT_LIGHT, tags=("ui", f"pal_txt_{idx}"))
+            p_txt = self.canvas.create_text(px, py, text=letra, font=("Arial", 28, "bold"), fill=TEXT_LIGHT, tags=("ui", f"pal_txt_{idx}"))
             
             self.palette_items.append((p_shadow, p_box, p_txt))
             
@@ -257,7 +270,6 @@ def abrir_ventana_wordle():
 
     def iniciar_juego():
         welcome_win.destroy()
-        # Placeholder para la lógica real de Wordle
         v = Toplevel(root)
         v.title("Wordle - UCAB")
         v.geometry("480x360")
@@ -268,22 +280,30 @@ def abrir_ventana_wordle():
     Button(welcome_win, text="Empezar el juego", command=iniciar_juego, bg=UCAB_YELLOW, fg=TEXT_DARK, font=("Arial", 14, "bold"), padx=20, pady=10, cursor="hand2").pack()
 
 # ====================================================================================
-# NUEVA VENTANA DE BIENVENIDA PARA APENSAR
+# VENTANA DE BIENVENIDA MAXIMIZADA PARA APENSAR
 # ====================================================================================
 def abrir_ventana_apensar():
     n = nombre_usuario()
     welcome_win = Toplevel(root)
     welcome_win.title("Apensar UCAB")
-    welcome_win.geometry("500x300")
+    
+    # Activar pantalla completa para la bienvenida
+    welcome_win.state("zoomed")
     welcome_win.config(bg=UCAB_YELLOW)
 
-    Label(welcome_win, text=f"¡Bienvenido al juego de Apensar,\n{n}!", font=("Arial", 18, "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK, justify="center").pack(pady=(70, 30))
+    # Contenedor central para alinear todo en medio
+    frame_central = Frame(welcome_win, bg=UCAB_YELLOW)
+    frame_central.pack(expand=True)
+
+    Label(frame_central, text="APENSAR UCAB", font=("Arial", 50, "bold"), bg=UCAB_YELLOW, fg=UCAB_BLUE).pack(pady=(0, 20))
+    Label(frame_central, text=f"¡Bienvenido al desafío,\n{n}!", font=("Arial", 24, "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK, justify="center").pack(pady=(0, 50))
 
     def iniciar_juego():
         welcome_win.destroy()
         ApensarGame(root, n)
 
-    Button(welcome_win, text="Empezar el juego", command=iniciar_juego, bg="#131514", fg="#ffffff", font=("Arial", 14, "bold"), padx=20, pady=10, cursor="hand2").pack()
+    Button(frame_central, text="▶ JUGAR", command=iniciar_juego, bg=UCAB_BLUE, fg=TEXT_LIGHT, font=("Arial", 20, "bold"), padx=40, pady=15, cursor="hand2").pack(pady=10)
+    Button(frame_central, text="Volver al Menú", command=welcome_win.destroy, bg="red", fg=TEXT_LIGHT, font=("Arial", 14, "bold"), padx=20, pady=5, cursor="hand2").pack(pady=20)
 
 
 # ====================================================================================
@@ -291,7 +311,7 @@ def abrir_ventana_apensar():
 # ====================================================================================
 root = Tk()
 root.title("El Ucabista - Desafío Digital")
-root.geometry("960x640")
+root.state("zoomed") # Asegura que el menú inicial también inicie maximizado si lo deseas
 root.minsize(640, 420)
 
 main_canvas = Canvas(root, highlightthickness=0)
@@ -353,7 +373,7 @@ def nombre_usuario():
     return entrada_widget.get().strip() if entrada_widget and entrada_widget.get().strip() else "VISITANTE UCABISTA"
 
 def create_text_with_shadow(canvas, x, y, text, font, fill, tags=()):
-    canvas.create_text(x + 1, y + 1, text=text, font=font, fill="#000000", tags=tags)
+    canvas.create_text(x + 2, y + 2, text=text, font=font, fill="#000000", tags=tags)
     canvas.create_text(x, y, text=text, font=font, fill=fill, tags=tags)
 
 def dibujar_ui_menu():
@@ -362,33 +382,33 @@ def dibujar_ui_menu():
     W, H = main_canvas.winfo_width() or 960, main_canvas.winfo_height() or 640
     x_center = W / 2
 
-    if logo_img is None: logo_img = cargar_logo(LOGO_RUTA, 160)
+    if logo_img is None: logo_img = cargar_logo(LOGO_RUTA, 220)
     logo_h = logo_img.height() if logo_img else 0
-    y_top = max(int(0.18 * H), logo_h + 70)
+    y_top = max(int(0.18 * H), logo_h + 90)
 
-    if logo_img: main_canvas.create_image(x_center, int(logo_h/2) + 12, image=logo_img, tags="ui")
+    if logo_img: main_canvas.create_image(x_center, int(logo_h/2) + 20, image=logo_img, tags="ui")
 
-    create_text_with_shadow(main_canvas, x_center, y_top + 10, "Bienvenidos al desafío ucabista", ("Century Gothic", max(18, int(H*0.03)), "bold"), TEXT_LIGHT, "ui")
-    create_text_with_shadow(main_canvas, x_center, y_top + 48, "Ingresa tu nombre de usuario para comenzar a jugar", ("Arial", max(11, int(H*0.017)), "normal"), TEXT_LIGHT, "ui")
+    create_text_with_shadow(main_canvas, x_center, y_top + 10, "Bienvenidos al desafío ucabista", ("Century Gothic", max(24, int(H*0.04)), "bold"), TEXT_LIGHT, "ui")
+    create_text_with_shadow(main_canvas, x_center, y_top + 60, "Ingresa tu nombre de usuario para comenzar a jugar", ("Arial", max(14, int(H*0.02)), "normal"), TEXT_LIGHT, "ui")
 
     if entrada_widget is None:
-        entrada_widget = Entry(root, font=("Arial", 12), justify="center", width=20, bd=0, highlightthickness=1, relief="flat")
+        entrada_widget = Entry(root, font=("Arial", 16), justify="center", width=25, bd=0, highlightthickness=1, relief="flat")
         entrada_widget.config(highlightbackground="#cccccc", highlightcolor="#aaaaaa")
         
-    main_canvas.create_window(x_center, y_top + 92, window=entrada_widget, width=min(420, int(W * 0.32)), height=34, tags="ui")
-    create_text_with_shadow(main_canvas, x_center, y_top + 132, "Selecciona un juego para comenzar", ("Arial", max(12, int(H*0.018)), "italic"), TEXT_LIGHT, "ui")
+    main_canvas.create_window(x_center, y_top + 120, window=entrada_widget, width=min(500, int(W * 0.4)), height=40, tags="ui")
+    create_text_with_shadow(main_canvas, x_center, y_top + 180, "Selecciona un juego para comenzar", ("Arial", max(16, int(H*0.025)), "italic"), TEXT_LIGHT, "ui")
 
-    total_w = min(0.85 * W, 900)
-    pr_w = (total_w - 40) / 3
-    pr_h = min(0.35 * (H - (y_top + 260)), 80)
-    gap = 20
+    total_w = min(0.85 * W, 1000)
+    pr_w = (total_w - 60) / 3
+    pr_h = min(0.35 * (H - (y_top + 300)), 90)
+    gap = 30
     start_x = (W - (3*pr_w + 2*gap)) / 2 + pr_w/2
-    y_center = y_top + 320
+    y_center = y_top + 380
 
     def crear_prisma_menu(xc, yc, w, h, color, texto, text_color, comando):
         pts = prisma_points(xc, yc, w, h)
         poly = main_canvas.create_polygon(pts, fill=color, outline="", smooth=False, tags=("ui","prism"))
-        txt = main_canvas.create_text(xc, yc, text=texto, font=("Arial", max(12, int(pr_w/12)), "bold"), fill=text_color, tags=("ui","prism"))
+        txt = main_canvas.create_text(xc, yc, text=texto, font=("Arial", max(16, int(pr_w/10)), "bold"), fill=text_color, tags=("ui","prism"))
         for item in (poly, txt):
             main_canvas.tag_bind(item, "<Enter>", lambda e: main_canvas.itemconfig(poly, fill=adjust_brightness(color, HOVER_FACTOR)))
             main_canvas.tag_bind(item, "<Leave>", lambda e: main_canvas.itemconfig(poly, fill=color))
@@ -399,9 +419,9 @@ def dibujar_ui_menu():
     crear_prisma_menu(start_x + 2*(pr_w + gap), y_center, pr_w, pr_h, UCAB_GREEN, "Wordle", TEXT_LIGHT, abrir_ventana_wordle)
 
     # Botón Salir
-    bx, by = W - 98, H - 38
-    rect = main_canvas.create_rectangle(bx - 80, by - 20, bx + 80, by + 20, fill="red", outline="", tags="ui")
-    main_canvas.create_text(bx, by, text="Salir de la App :(", fill="white", font=("Arial", 11, "bold"), tags="ui")
+    bx, by = W - 120, H - 50
+    rect = main_canvas.create_rectangle(bx - 100, by - 25, bx + 100, by + 25, fill="red", outline="", tags="ui")
+    main_canvas.create_text(bx, by, text="Salir de la App :(", fill="white", font=("Arial", 14, "bold"), tags="ui")
     main_canvas.tag_bind(rect, "<Button-1>", lambda e: root.destroy())
 
 # Inicializar
