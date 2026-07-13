@@ -55,9 +55,9 @@ NIVELES_APENSAR = [
     {
         "palabra": "BIBLIOTECA",
         "imagenes": [
-            "bibliotecaucab.png",
+            "bibliotecaucab.jpg",
             "bibliotecaucab1.png",
-            "bibliotecaucab2.png",
+            "bibliotecaucab2.jpg",
             "bibliotecaucab3.png"
         ]
     },
@@ -67,16 +67,16 @@ NIVELES_APENSAR = [
             "50ucab.png",
             "50ucab1.png",
             "50ucab2.png",
-            "50ucab3.png"
+            "50ucab3.jpg"
         ]
     },
     {
         "palabra": "ANDRESBELLO",
         "imagenes": [
             "andresbello.png",
-            "andresbello1.png",
+            "andresbello1.jpg",
             "andresbello2.png",
-            "andresbello3.png"
+            "andresbello3.jpg"
         ]
     } 
 ]
