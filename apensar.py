@@ -32,7 +32,7 @@ def create_rounded_rect(canvas, x1, y1, x2, y2, r, **kwargs):
     return canvas.create_polygon(points, **kwargs, smooth=True)
 
 # ====================================================================================
-# JUEGO: APENSAR UCAB (NIVEL 1)
+# JUEGO: APENSAR UCAB (PANTALLA COMPLETA)
 # ====================================================================================
 class ApensarGame:
     def __init__(self, parent, user_name):
@@ -40,9 +40,12 @@ class ApensarGame:
         self.window = Toplevel(parent)
         self.window.title("Apensar UCAB")
         
-        # Activar Pantalla Completa (Maximizada)
+        # PANTALLA COMPLETA
         self.window.state("zoomed") 
         self.window.configure(bg=BG_APENSAR)
+        
+        # EVENTOS DE TECLADO
+        self.window.bind("<Key>", self.tecla_presionada)
         
         self.user_name = user_name
         self.palabra_correcta = "LABORATORIOS"
@@ -50,66 +53,53 @@ class ApensarGame:
         
         self.slots = [None] * self.longitud        
         self.slot_sources = [None] * self.longitud 
-        self.monedas = 185 
-        self.nivel = 12    
+        self.vidas = 3  
+        self.bloqueado = False # Para evitar que escriban mientras sale un mensaje
         
+        # ACTUALIZADO A FORMATO PNG
         self.rutas_imagenes = [
-            "laboratoriosucab1.jpg",
-            "laboratorioucab2.jpg",
-            "laboratorioucab3.jpg",
-            "laboratoriosucab.jpg"
+            "laboratoriosucab1.png",
+            "laboratorioucab2.png",
+            "laboratorioucab3.png",
+            "laboratoriosucab.png"
         ]
         self.img_referencias = []
         
         self.canvas = Canvas(self.window, bg=BG_APENSAR, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         
-        # Esperar un instante para que la ventana tome el tamaño de la pantalla
         self.window.update()
         self.iniciar_nivel()
 
     def dibujar_encabezado_juego(self, W):
-        # Botón volver (<)
         lbl_back = self.canvas.create_text(60, 50, text="< Volver", font=("Arial", 18, "bold"), fill=UCAB_BLUE, tags=("ui", "btn_volver"))
         self.canvas.tag_bind(lbl_back, "<Button-1>", lambda e: self.window.destroy())
         
-        # Título APENSAR UCAB
         self.canvas.create_text(W/2, 50, text="APENSAR UCAB", font=("Arial", 28, "bold"), fill=UCAB_BLUE, tags="ui")
         
-        # Insignia de Nivel
-        self.canvas.create_oval(W - 250, 30, W - 205, 75, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
-        self.canvas.create_text(W - 227, 52, text=str(self.nivel), font=("Arial", 18, "bold"), fill=TEXT_LIGHT, tags="ui")
+        # Insignia Vidas (Se ajustó la posición para llenar el vacío del "12")
+        self.canvas.create_oval(W - 140, 35, W - 105, 70, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
+        self.canvas.create_text(W - 122, 53, text="❤", font=("Arial", 18), fill="red", tags="ui")
+        self.canvas.create_text(W - 60, 52, text=str(self.vidas), font=("Arial", 20, "bold"), fill=UCAB_BLUE, tags=("ui", "txt_vidas"))
 
-        # Insignia de Monedas
-        self.canvas.create_oval(W - 160, 35, W - 125, 70, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
-        self.canvas.create_text(W - 142, 52, text="$", font=("Arial", 16, "bold"), fill="#D4A000", tags="ui")
-        self.canvas.create_text(W - 80, 52, text=str(self.monedas), font=("Arial", 20, "bold"), fill=UCAB_BLUE, tags="ui")
-
-    # ---------------- Pantalla Principal del Nivel ----------------
     def iniciar_nivel(self):
         self.canvas.delete("ui")
         
-        # Obtener dimensiones reales de la pantalla
         W = self.window.winfo_width()
         H = self.window.winfo_height()
         
-        # Si por alguna razón la ventana no se actualizó, usamos los de la pantalla principal
         if W <= 1 or H <= 1:
             W, H = self.window.winfo_screenwidth(), self.window.winfo_screenheight()
             
         x_center = W / 2
-
         self.dibujar_encabezado_juego(W)
 
-        # ---------------- IMÁGENES CENTRADAS DINÁMICAMENTE ----------------
-        img_size = 180 # Tamaño de cada cuadrito
+        # IMÁGENES CENTRADAS DINÁMICAMENTE
+        img_size = 180 
         gap_img = 6
-        
-        # Altura inicial basada en el porcentaje de la pantalla
         marco_y1 = int(H * 0.15) 
         marco_y2 = marco_y1 + (img_size * 2) + (gap_img * 2)
         
-        # Marco blanco de fondo que agrupa las 4 imágenes
         marco_x1 = x_center - img_size - gap_img
         marco_x2 = x_center + img_size + gap_img
         create_rounded_rect(self.canvas, marco_x1, marco_y1, marco_x2, marco_y2, 12, fill=TEXT_LIGHT, tags="ui")
@@ -138,18 +128,16 @@ class ApensarGame:
             if idx < len(self.img_referencias):
                 self.canvas.create_image(bx, by, image=self.img_referencias[idx], anchor="nw", tags="ui")
 
-        # ---------------- SLOTS (Casillas de letras) ----------------
+        # SLOTS (Casillas de letras)
         tile_w = 40
         gap_slots = 8
         total_w_slots = self.longitud * (tile_w + gap_slots) - gap_slots
         start_x_slots = x_center - total_w_slots / 2 + tile_w / 2
         
-        # Ubicados justo debajo del marco de imágenes
         y_slots = marco_y2 + 60 
 
         for i in range(self.longitud):
             sx = start_x_slots + i * (tile_w + gap_slots)
-            
             create_rounded_rect(self.canvas, sx - tile_w/2, y_slots - tile_w/2, sx + tile_w/2, y_slots + tile_w/2 + 3, 6, fill="#A5C1D1", tags=("ui", f"slot_bg_{i}"))
             box = create_rounded_rect(self.canvas, sx - tile_w/2, y_slots - tile_w/2, sx + tile_w/2, y_slots + tile_w/2, 6, fill=TEXT_LIGHT, tags=("ui", f"slot_box_{i}"))
             txt = self.canvas.create_text(sx, y_slots, text="", font=("Arial", 22, "bold"), fill=TEXT_DARK, tags=("ui", f"slot_txt_{i}"))
@@ -157,14 +145,13 @@ class ApensarGame:
             for item in (box, txt):
                 self.canvas.tag_bind(item, "<Button-1>", lambda e, idx=i: self.remover_letra(idx))
 
-        # ---------------- TECLADO INFERIOR ----------------
+        # TECLADO INFERIOR
         letras_correctas = list(self.palabra_correcta)
         distractores = ["M", "U"]
         self.letras_paleta = letras_correctas + distractores
         random.seed(42)
         random.shuffle(self.letras_paleta)
 
-        # Ubicado justo debajo de las casillas
         y_palette_start = y_slots + 90
         key_w = 30
         key_h = 32
@@ -173,7 +160,6 @@ class ApensarGame:
         for idx, letra in enumerate(self.letras_paleta):
             row = idx // 7
             col = idx % 7
-            
             px = x_center - 225 + col * 75
             py = y_palette_start + row * 80
             
@@ -186,7 +172,26 @@ class ApensarGame:
             for item in (p_shadow, p_box, p_txt):
                 self.canvas.tag_bind(item, "<Button-1>", lambda e, l=letra, i=idx: self.presionar_letra(l, i))
 
+    def tecla_presionada(self, event):
+        if self.bloqueado: return
+        
+        if event.keysym == 'BackSpace':
+            for i in range(self.longitud - 1, -1, -1):
+                if self.slots[i] is not None:
+                    self.remover_letra(i)
+                    return
+        elif event.char.isalpha():
+            letra = event.char.upper()
+            for idx, pal_letra in enumerate(self.letras_paleta):
+                if pal_letra == letra:
+                    estado_actual = self.canvas.itemcget(f"pal_box_{idx}", "state")
+                    if estado_actual != "hidden":
+                        self.presionar_letra(letra, idx)
+                        return
+
     def presionar_letra(self, letra, idx_paleta):
+        if self.bloqueado: return
+        
         for i in range(self.longitud):
             if self.slots[i] is None:
                 self.slots[i] = letra
@@ -203,6 +208,8 @@ class ApensarGame:
                 break
 
     def remover_letra(self, idx_slot):
+        if self.bloqueado: return
+        
         if self.slots[idx_slot] is not None:
             idx_paleta = self.slot_sources[idx_slot]
             self.slots[idx_slot] = None
@@ -217,10 +224,49 @@ class ApensarGame:
     def verificar_resultado(self):
         intento = "".join(self.slots)
         if intento == self.palabra_correcta:
-            messagebox.showinfo("¡CORRECTO!", f"¡Excelente {self.user_name}!\nLa respuesta es LABORATORIOS.")
-            self.window.destroy()
+            self.mostrar_mensaje_in_game("exito", f"¡Excelente {self.user_name}!\nLa respuesta es LABORATORIOS.", auto_cerrar=False)
         else:
-            messagebox.showerror("Fallaste", "Palabra incorrecta. Intenta de nuevo.")
+            self.vidas -= 1
+            self.canvas.itemconfig("txt_vidas", text=str(self.vidas))
+            
+            if self.vidas <= 0:
+                self.mostrar_mensaje_in_game("fin", f"¡Te has quedado sin vidas!\nSuerte para la próxima.", auto_cerrar=False)
+            else:
+                self.mostrar_mensaje_in_game("error", f"Palabra incorrecta.\nTe quedan {self.vidas} vida(s).", auto_cerrar=True)
+                
+    # ================= NUEVO SISTEMA DE MENSAJES IN-GAME =================
+    def mostrar_mensaje_in_game(self, tipo, texto, auto_cerrar):
+        self.bloqueado = True 
+        W, H = self.window.winfo_width(), self.window.winfo_height()
+        cx, cy = W/2, H/2
+        w_box, h_box = 400, 220
+        
+        # Sombra y Cartel Principal
+        create_rounded_rect(self.canvas, cx - w_box/2 + 6, cy - h_box/2 + 6, cx + w_box/2 + 6, cy + h_box/2 + 6, 16, fill="#7A9CAE", tags="msg_ui")
+        create_rounded_rect(self.canvas, cx - w_box/2, cy - h_box/2, cx + w_box/2, cy + h_box/2, 16, fill=TEXT_LIGHT, tags="msg_ui")
+        
+        color_titulo = "#E74C3C" if tipo in ["error", "fin"] else UCAB_GREEN
+        titulo = "¡CORRECTO!" if tipo == "exito" else ("¡FALLASTE!" if tipo == "error" else "FIN DEL JUEGO")
+        
+        self.canvas.create_text(cx, cy - 50, text=titulo, font=("Arial", 26, "bold"), fill=color_titulo, tags="msg_ui")
+        self.canvas.create_text(cx, cy + 5, text=texto, font=("Arial", 16), fill=TEXT_DARK, justify="center", tags="msg_ui")
+        
+        if auto_cerrar:
+            # Si tiene vidas, se limpia solo después de 1.5 segundos
+            self.window.after(1500, self.limpiar_mensaje_y_casillas)
+        else:
+            # Si ganó o perdió definitivamente, mostramos botón de salir
+            btn_w, btn_h = 160, 45
+            btn_y = cy + 70
+            create_rounded_rect(self.canvas, cx - btn_w/2, btn_y - btn_h/2, cx + btn_w/2, btn_y + btn_h/2, 8, fill=UCAB_BLUE, tags=("msg_ui", "btn_msg"))
+            self.canvas.create_text(cx, btn_y, text="Continuar", font=("Arial", 14, "bold"), fill=TEXT_LIGHT, tags=("msg_ui", "btn_msg"))
+            self.canvas.tag_bind("btn_msg", "<Button-1>", lambda e: self.window.destroy())
+
+    def limpiar_mensaje_y_casillas(self):
+        self.canvas.delete("msg_ui")
+        for i in range(self.longitud):
+            self.remover_letra(i)
+        self.bloqueado = False
 
 # ----------------- Funciones Auxiliares del Menú Original -----------------
 def clamp(v, a=0, b=255): return max(a, min(b, int(v)))
@@ -280,38 +326,29 @@ def abrir_ventana_wordle():
     Button(welcome_win, text="Empezar el juego", command=iniciar_juego, bg=UCAB_YELLOW, fg=TEXT_DARK, font=("Arial", 14, "bold"), padx=20, pady=10, cursor="hand2").pack()
 
 # ====================================================================================
-# VENTANA DE BIENVENIDA MAXIMIZADA PARA APENSAR
+# VENTANA DE BIENVENIDA PARA APENSAR (RESTAURADA)
 # ====================================================================================
 def abrir_ventana_apensar():
     n = nombre_usuario()
     welcome_win = Toplevel(root)
     welcome_win.title("Apensar UCAB")
-    
-    # Activar pantalla completa para la bienvenida
-    welcome_win.state("zoomed")
+    welcome_win.geometry("500x300")
     welcome_win.config(bg=UCAB_YELLOW)
 
-    # Contenedor central para alinear todo en medio
-    frame_central = Frame(welcome_win, bg=UCAB_YELLOW)
-    frame_central.pack(expand=True)
-
-    Label(frame_central, text="APENSAR UCAB", font=("Arial", 50, "bold"), bg=UCAB_YELLOW, fg=UCAB_BLUE).pack(pady=(0, 20))
-    Label(frame_central, text=f"¡Bienvenido al desafío,\n{n}!", font=("Arial", 24, "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK, justify="center").pack(pady=(0, 50))
+    Label(welcome_win, text=f"¡Bienvenido al juego de Apensar,\n{n}!", font=("Arial", 18, "bold"), bg=UCAB_YELLOW, fg=TEXT_DARK, justify="center").pack(pady=(70, 30))
 
     def iniciar_juego():
         welcome_win.destroy()
         ApensarGame(root, n)
 
-    Button(frame_central, text="▶ JUGAR", command=iniciar_juego, bg=UCAB_BLUE, fg=TEXT_LIGHT, font=("Arial", 20, "bold"), padx=40, pady=15, cursor="hand2").pack(pady=10)
-    Button(frame_central, text="Volver al Menú", command=welcome_win.destroy, bg="red", fg=TEXT_LIGHT, font=("Arial", 14, "bold"), padx=20, pady=5, cursor="hand2").pack(pady=20)
-
+    Button(welcome_win, text="Empezar el juego", command=iniciar_juego, bg=UCAB_BLUE, fg=TEXT_LIGHT, font=("Arial", 14, "bold"), padx=20, pady=10, cursor="hand2").pack()
 
 # ====================================================================================
-# INTERFAZ PRINCIPAL (MENÚ ORIGINAL)
+# INTERFAZ PRINCIPAL (MENÚ ORIGINAL INTACTO)
 # ====================================================================================
 root = Tk()
 root.title("El Ucabista - Desafío Digital")
-root.state("zoomed") # Asegura que el menú inicial también inicie maximizado si lo deseas
+root.geometry("960x640")
 root.minsize(640, 420)
 
 main_canvas = Canvas(root, highlightthickness=0)
@@ -373,7 +410,7 @@ def nombre_usuario():
     return entrada_widget.get().strip() if entrada_widget and entrada_widget.get().strip() else "VISITANTE UCABISTA"
 
 def create_text_with_shadow(canvas, x, y, text, font, fill, tags=()):
-    canvas.create_text(x + 2, y + 2, text=text, font=font, fill="#000000", tags=tags)
+    canvas.create_text(x + 1, y + 1, text=text, font=font, fill="#000000", tags=tags)
     canvas.create_text(x, y, text=text, font=font, fill=fill, tags=tags)
 
 def dibujar_ui_menu():
@@ -382,33 +419,33 @@ def dibujar_ui_menu():
     W, H = main_canvas.winfo_width() or 960, main_canvas.winfo_height() or 640
     x_center = W / 2
 
-    if logo_img is None: logo_img = cargar_logo(LOGO_RUTA, 220)
+    if logo_img is None: logo_img = cargar_logo(LOGO_RUTA, 160)
     logo_h = logo_img.height() if logo_img else 0
-    y_top = max(int(0.18 * H), logo_h + 90)
+    y_top = max(int(0.18 * H), logo_h + 70)
 
-    if logo_img: main_canvas.create_image(x_center, int(logo_h/2) + 20, image=logo_img, tags="ui")
+    if logo_img: main_canvas.create_image(x_center, int(logo_h/2) + 12, image=logo_img, tags="ui")
 
-    create_text_with_shadow(main_canvas, x_center, y_top + 10, "Bienvenidos al desafío ucabista", ("Century Gothic", max(24, int(H*0.04)), "bold"), TEXT_LIGHT, "ui")
-    create_text_with_shadow(main_canvas, x_center, y_top + 60, "Ingresa tu nombre de usuario para comenzar a jugar", ("Arial", max(14, int(H*0.02)), "normal"), TEXT_LIGHT, "ui")
+    create_text_with_shadow(main_canvas, x_center, y_top + 10, "Bienvenidos al desafío ucabista", ("Century Gothic", max(18, int(H*0.03)), "bold"), TEXT_LIGHT, "ui")
+    create_text_with_shadow(main_canvas, x_center, y_top + 48, "Ingresa tu nombre de usuario para comenzar a jugar", ("Arial", max(11, int(H*0.017)), "normal"), TEXT_LIGHT, "ui")
 
     if entrada_widget is None:
-        entrada_widget = Entry(root, font=("Arial", 16), justify="center", width=25, bd=0, highlightthickness=1, relief="flat")
+        entrada_widget = Entry(root, font=("Arial", 12), justify="center", width=20, bd=0, highlightthickness=1, relief="flat")
         entrada_widget.config(highlightbackground="#cccccc", highlightcolor="#aaaaaa")
         
-    main_canvas.create_window(x_center, y_top + 120, window=entrada_widget, width=min(500, int(W * 0.4)), height=40, tags="ui")
-    create_text_with_shadow(main_canvas, x_center, y_top + 180, "Selecciona un juego para comenzar", ("Arial", max(16, int(H*0.025)), "italic"), TEXT_LIGHT, "ui")
+    main_canvas.create_window(x_center, y_top + 92, window=entrada_widget, width=min(420, int(W * 0.32)), height=34, tags="ui")
+    create_text_with_shadow(main_canvas, x_center, y_top + 132, "Selecciona un juego para comenzar", ("Arial", max(12, int(H*0.018)), "italic"), TEXT_LIGHT, "ui")
 
-    total_w = min(0.85 * W, 1000)
-    pr_w = (total_w - 60) / 3
-    pr_h = min(0.35 * (H - (y_top + 300)), 90)
-    gap = 30
+    total_w = min(0.85 * W, 900)
+    pr_w = (total_w - 40) / 3
+    pr_h = min(0.35 * (H - (y_top + 260)), 80)
+    gap = 20
     start_x = (W - (3*pr_w + 2*gap)) / 2 + pr_w/2
-    y_center = y_top + 380
+    y_center = y_top + 320
 
     def crear_prisma_menu(xc, yc, w, h, color, texto, text_color, comando):
         pts = prisma_points(xc, yc, w, h)
         poly = main_canvas.create_polygon(pts, fill=color, outline="", smooth=False, tags=("ui","prism"))
-        txt = main_canvas.create_text(xc, yc, text=texto, font=("Arial", max(16, int(pr_w/10)), "bold"), fill=text_color, tags=("ui","prism"))
+        txt = main_canvas.create_text(xc, yc, text=texto, font=("Arial", max(12, int(pr_w/12)), "bold"), fill=text_color, tags=("ui","prism"))
         for item in (poly, txt):
             main_canvas.tag_bind(item, "<Enter>", lambda e: main_canvas.itemconfig(poly, fill=adjust_brightness(color, HOVER_FACTOR)))
             main_canvas.tag_bind(item, "<Leave>", lambda e: main_canvas.itemconfig(poly, fill=color))
@@ -419,9 +456,9 @@ def dibujar_ui_menu():
     crear_prisma_menu(start_x + 2*(pr_w + gap), y_center, pr_w, pr_h, UCAB_GREEN, "Wordle", TEXT_LIGHT, abrir_ventana_wordle)
 
     # Botón Salir
-    bx, by = W - 120, H - 50
-    rect = main_canvas.create_rectangle(bx - 100, by - 25, bx + 100, by + 25, fill="red", outline="", tags="ui")
-    main_canvas.create_text(bx, by, text="Salir de la App :(", fill="white", font=("Arial", 14, "bold"), tags="ui")
+    bx, by = W - 98, H - 38
+    rect = main_canvas.create_rectangle(bx - 80, by - 20, bx + 80, by + 20, fill="red", outline="", tags="ui")
+    main_canvas.create_text(bx, by, text="Salir de la App :(", fill="white", font=("Arial", 11, "bold"), tags="ui")
     main_canvas.tag_bind(rect, "<Button-1>", lambda e: root.destroy())
 
 # Inicializar
