@@ -74,7 +74,7 @@ NIVELES_APENSAR = [
         "palabra": "ANDRESBELLO",
         "imagenes": [
             "andresbello.png",
-            "andresbello1.jpg",
+            "andresbello5.png",
             "andresbello2.png",
             "andresbello3.jpg"
         ]
