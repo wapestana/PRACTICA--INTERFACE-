@@ -375,6 +375,9 @@ def prisma_points(xc, yc, w, h):
         xc - w / 2, yc - tail_h / 2, xc - body_w / 2, yc - tail_h / 2
     ]
 
+# ====================================================================================
+# JUEGO TRIVIA UCAB
+#====================================================================================
 
 class TriviaUCABApp:
     def __init__(self, root, player_name):
@@ -586,6 +589,9 @@ class TriviaUCABApp:
         messagebox.showerror("Fin del Juego", f"💀 {self.player_name}, te has quedado sin vidas. ¡Inténtalo de nuevo!")
         self.window.destroy()
 
+#====================================================================================
+#JUEGO WORDLE UCAB
+#====================================================================================
 
 def iniciar_juego_wordle(v_wordle, player_name):
     v_wordle.title("Wordle UCAB")
