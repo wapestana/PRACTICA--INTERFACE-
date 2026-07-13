@@ -46,10 +46,10 @@ NIVELES_APENSAR = [
     {
         "palabra": "BIBLIOTECA",
         "imagenes": [
-            "biblioteca.jpg",
-            "biblioteca1.png",
-            "biblioteca2.jpg",
-            "biblioteca3.png"
+            "bibliotecaucab.jpg",
+            "bibliotecaucab1.png",
+            "bibliotecaucab2.jpg",
+            "bibliotecaucab3.png"
         ]
     },
     {
