@@ -227,7 +227,7 @@ class TriviaUCABApp:
 # SECCIÓN WORDLE: REDISEÑADA CON FUNCIONES
 # ==========================================
 def iniciar_juego_wordle(v_wordle, player_name):
-    v_wordle.title("Wordle UCAB v1.0")
+    v_wordle.title("Wordle UCAB")
     v_wordle.state("zoomed")
     v_wordle.configure(bg=UCAB_GREEN)
 

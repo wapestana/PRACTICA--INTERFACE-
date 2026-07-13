@@ -248,7 +248,7 @@ class WordleUCABApp:
     def __init__(self, root, player_name):
         self.root = root
         self.player_name = player_name
-        self.root.title("Wordle UCAB v1.0")
+        self.root.title("Wordle UCAB")
         self.root.state("zoomed")
         self.root.configure(bg=UCAB_GREEN)
 
@@ -552,7 +552,7 @@ def abrir_ventana_apensar():
 def abrir_ventana_trivia():
     n = nombre_usuario()
     welcome_win = Toplevel(root)
-    welcome_win.title("Bienvenida - Trivia UCAB")
+    welcome_win.title("Trivia UCAB")
     welcome_win.geometry("500x300")
     welcome_win.config(bg=UCAB_BLUE)
 
