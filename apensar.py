@@ -48,11 +48,37 @@ NIVELES_APENSAR = [
         "imagenes": [
             "feriaucab.png",
             "feriaucab1.png",
-            "feriaucab2.png",
+            "feriaucab2.jpg",
             "feriaucab3.png"
         ]
-    }
-    # Puedes agregar más niveles aquí siguiendo el mismo formato de arriba
+    },
+    {
+        "palabra": "BIBLIOTECA",
+        "imagenes": [
+            "bibliotecaucab.png",
+            "bibliotecaucab1.png",
+            "bibliotecaucab2.png",
+            "bibliotecaucab3.png"
+        ]
+    },
+    {
+        "palabra": "CINQUENTENARIO",
+        "imagenes": [
+            "50ucab.png",
+            "50ucab1.png",
+            "50ucab2.png",
+            "50ucab3.png"
+        ]
+    },
+    {
+        "palabra": "ANDRESBELLO",
+        "imagenes": [
+            "andresbello.png",
+            "andresbello1.png",
+            "andresbello2.png",
+            "andresbello3.png"
+        ]
+    } 
 ]
 
 # Función para dibujar rectángulos redondeados
