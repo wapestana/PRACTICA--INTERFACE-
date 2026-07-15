@@ -70,14 +70,14 @@ NIVELES_APENSAR = [
     {
         "palabra": "ANDRESBELLO",
         "imagenes": [
-            "andresbello.png",
+            "andresbello5.png",
             "andresbello1.jpg",
             "andresbello2.png",
             "andresbello5.png"
         ]
     },
     {
-        "palabra": "CINQUENTENARIO",
+        "palabra": "CINCUENTENARIO",
         "imagenes": [
             "50ucab.png",
             "50ucab1.png",
@@ -433,7 +433,7 @@ class TriviaUCABApp:
             {"nivel": 9, "pregunta": "¿Qué creencia hay entre los ucabistas sobre pasar por detrás de la estatua de Andrés Bello?", "opciones": ["Que raspan el siguiente parcial", "Que raspan una materia", "Que no se graduan", "Que no consiguen pareja"], "respuesta": "Que no se graduan"},
             {"nivel": 10, "pregunta": "¿En cuál de estas ciudades la UCAB tiene un centro de formación jesuita?", "opciones": ["San Antonio", "Maracaibo", "Valencia", "Barquisimeto"], "respuesta": "San Antonio"},
             {"nivel": 11, "pregunta": "¿Cómo se llama la plataforma digital donde los estudiantes inscriben sus materias, pagan matrícula y revisan su récord académico?", "opciones": ["Módulo 7", "Gestión de Solicitudes", "Planificación e Inscripción", "Secretaría en Línea"], "respuesta": "Secretaría en Línea"},
-            {"nivel": 12, "pregunta": "Según QS, ¿qué posición ocupa la UCAB entre las universidades privadas de Venezuela?", "opciones": ["Primer lugar", "Segundo lugar", "Tercer lugar", "Cuarto lugar"], "respuesta": "Primer lugar"},
+            {"nivel": 12, "pregunta": "Según QS, ¿Qué posición ocupa la UCAB entre las universidades privadas de Venezuela?", "opciones": ["Primer lugar", "Segundo lugar", "Tercer lugar", "Cuarto lugar"], "respuesta": "Primer lugar"},
             {"nivel": 13, "pregunta": "¿Qué idioma extranjero debe aprobar obligatoriamente un estudiante de pregrado para graduarse?", "opciones": ["Italiano", "Alemán", "Portugués", "Inglés"], "respuesta": "Inglés"},
             {"nivel": 14, "pregunta": "El edificio de aulas se divide en bloques; ¿cómo se les llama?", "opciones": ["Pasillos", "Unidades", "Programas", "Módulos"], "respuesta": "Módulos"},
             {"nivel": 15, "pregunta": "¿Cómo se llama el trabajo final de investigación que deben presentar para obtener el título?", "opciones": ["Investigación Final", "Tesis de Grado", "Trabajo Final", "Parcial Final"], "respuesta": "Tesis de Grado"},
