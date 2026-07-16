@@ -28,8 +28,6 @@ LOGO_RUTA = "Logo_UCAB.png"
 # ====================================================================================
 # BASE DE DATOS DE NIVELES DE APENSAR
 # ====================================================================================
-# Aquí se guardan los niveles del juego Apensar: cada uno tiene una palabra secreta y
-# las imágenes que sirven como pista visual para adivinarla.
 NIVELES_APENSAR = [
     {
         "palabra": "LABORATORIOS",
@@ -88,8 +86,7 @@ NIVELES_APENSAR = [
 ]
 
 
-# Función reutilizable para dibujar formas con esquinas redondeadas, útil para crear
-# botones, paneles y cuadros visuales con un estilo más limpio y moderno.
+# Función reutilizable para dibujar formas con esquinas redondeadas
 def create_rounded_rect(canvas, x1, y1, x2, y2, r, **kwargs):
     points = (
         x1 + r, y1, x1 + r, y1, x2 - r, y1, x2 - r, y1, x2, y1, x2, y1 + r, x2, y1 + r, x2, y2 - r,
@@ -99,12 +96,9 @@ def create_rounded_rect(canvas, x1, y1, x2, y2, r, **kwargs):
     return canvas.create_polygon(points, **kwargs, smooth=True)
 
 
-# Clase principal del juego Apensar. Gestiona toda la lógica de una ventana propia,
-# incluyendo la carga de niveles, el conteo de vidas y la interacción con las letras.
+# Clase principal del juego Apensar con la nueva imagen de fondo integrada.
 class ApensarGame:
     def __init__(self, parent, user_name):
-        # Se crea la ventana del juego, se asigna el nombre del jugador y se inicializan
-        # las variables que controlan el progreso, las vidas y el orden de los niveles.
         self.parent = parent
         self.window = Toplevel(parent)
         self.window.title("Apensar UCAB")
@@ -124,12 +118,40 @@ class ApensarGame:
         self.canvas = Canvas(self.window, bg=BG_APENSAR, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
 
+        # Cargar y preparar la imagen de fondo para Apensar
+        self.bg_photo = None
+        self._cargar_fondo()
+
         self.window.update()
         self.cargar_nivel()
 
+    def _cargar_fondo(self):
+        # Carga la imagen del campus de fondo y aplica un filtro claro para mejorar legibilidad
+        self.window.update_idletasks()
+        W = self.window.winfo_width()
+        H = self.window.winfo_height()
+        if W <= 1 or H <= 1:
+            W, H = self.window.winfo_screenwidth(), self.window.winfo_screenheight()
+
+        ruta_fondo = "imagen_apensar_ucab.jpg"
+        if os.path.exists(ruta_fondo):
+            try:
+                img = Image.open(ruta_fondo)
+                bg_image = img.resize((W, H), Image.Resampling.LANCZOS)
+                # Aplicamos un overlay blanco semitransparente (alfa=120) para que resalte la UI original
+                overlay = Image.new("RGBA", bg_image.size, (255, 255, 255, 120))
+                img_rgba = bg_image.convert("RGBA")
+                bg_image = Image.alpha_composite(img_rgba, overlay)
+                self.bg_photo = ImageTk.PhotoImage(bg_image)
+            except Exception:
+                self.bg_photo = None
+
     def cargar_nivel(self):
-        # Selecciona un nivel nuevo y limpia la interfaz para dibujar la siguiente ronda.
         self.canvas.delete("all")
+
+        # Dibujar la imagen de fondo si se cargó correctamente
+        if self.bg_photo:
+            self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
 
         indice_real = self.orden_niveles[self.progreso_idx]
         datos_nivel = NIVELES_APENSAR[indice_real]
@@ -145,7 +167,6 @@ class ApensarGame:
         self.iniciar_nivel_ui()
 
     def dibujar_encabezado_juego(self, W):
-        # Dibuja la barra superior con el título del juego, el botón para volver y el contador de vidas.
         lbl_back = self.canvas.create_text(60, 50, text="< Volver", font=("Arial", 18, "bold"), fill=UCAB_BLUE, tags=("ui", "btn_volver"))
         self.canvas.tag_bind(lbl_back, "<Button-1>", lambda e: self.window.destroy())
 
@@ -156,7 +177,6 @@ class ApensarGame:
         self.canvas.create_text(W - 60, 52, text=str(self.vidas), font=("Arial", 20, "bold"), fill=UCAB_BLUE, tags=("ui", "txt_vidas"))
 
     def iniciar_nivel_ui(self):
-        # Construye toda la interfaz del nivel actual: imágenes, espacios para letras y paleta de opciones.
         W = self.window.winfo_width()
         H = self.window.winfo_height()
 
@@ -241,7 +261,6 @@ class ApensarGame:
                 self.canvas.tag_bind(item, "<Button-1>", lambda e, l=letra, i=idx: self.presionar_letra(l, i))
 
     def tecla_presionada(self, event):
-        # Permite interactuar con el juego usando el teclado: retroceso para borrar y letras para jugar.
         if self.bloqueado:
             return
 
@@ -260,7 +279,6 @@ class ApensarGame:
                         return
 
     def presionar_letra(self, letra, idx_paleta):
-        # Coloca una letra en el primer espacio vacío y desactiva la opción elegida de la paleta.
         if self.bloqueado:
             return
 
@@ -280,7 +298,6 @@ class ApensarGame:
                 break
 
     def remover_letra(self, idx_slot):
-        # Quita una letra colocada anteriormente y devuelve su botón a la paleta de opciones.
         if self.bloqueado:
             return
 
@@ -296,7 +313,6 @@ class ApensarGame:
             self.canvas.itemconfig(p_txt, state="normal")
 
     def verificar_resultado(self):
-        # Evalúa si la palabra completa es correcta y decide si continúa al siguiente nivel o pierde una vida.
         intento = "".join(self.slots)
         if intento == self.palabra_correcta:
             if self.progreso_idx + 1 < len(self.orden_niveles):
@@ -313,12 +329,10 @@ class ApensarGame:
                 self.mostrar_mensaje_in_game("error", f"Palabra incorrecta.\nTe quedan {self.vidas} vida(s).", auto_cerrar=True)
 
     def avanzar_nivel(self):
-        # Avanza a la siguiente ronda del juego cuando el usuario responde correctamente.
         self.progreso_idx += 1
         self.cargar_nivel()
 
     def mostrar_mensaje_in_game(self, tipo, texto, auto_cerrar):
-        # Muestra un mensaje emergente dentro del juego para indicar éxito, error o fin del mismo.
         self.bloqueado = True
         W, H = self.window.winfo_width(), self.window.winfo_height()
         cx, cy = W / 2, H / 2
@@ -359,7 +373,6 @@ class ApensarGame:
             self.canvas.tag_bind("btn_msg_txt", "<Button-1>", lambda e: cmd())
 
     def limpiar_mensaje_y_casillas(self):
-        # Elimina el mensaje mostrado y reinicia las casillas para seguir jugando.
         self.canvas.delete("msg_ui")
         for i in range(self.longitud):
             self.remover_letra(i)
@@ -367,7 +380,6 @@ class ApensarGame:
 
 
 # ----------------- Funciones Auxiliares del Menú Original -----------------
-# Estas funciones ayudan a trabajar con colores y crear elementos visuales más dinámicos.
 def clamp(v, a=0, b=255):
     return max(a, min(b, int(v)))
 
@@ -397,15 +409,12 @@ def prisma_points(xc, yc, w, h):
         xc - w / 2, yc - tail_h / 2, xc - body_w / 2, yc - tail_h / 2
     ]
 
+
 # ====================================================================================
 # JUEGO TRIVIA UCAB
-#====================================================================================
-
-# Clase principal de la Trivia UCAB. Organiza el flujo completo del juego: carga de preguntas,
-# manejo de vidas, selección aleatoria y validación de respuestas.
+# ====================================================================================
 class TriviaUCABApp:
     def __init__(self, root, player_name):
-        # Inicializa la ventana de trivia con el nombre del jugador y prepara la base de preguntas.
         self.root = root
         self.player_name = player_name
 
@@ -420,7 +429,6 @@ class TriviaUCABApp:
         self._mostrar_pregunta(0)
 
     def _configurar_variables(self):
-        # Define la base de datos de preguntas, el número de vidas y la selección aleatoria de preguntas.
         self.questions_db = [
             {"nivel": 1, "pregunta": "¿Qué bebida es considerada un clásico entre los ucabistas?", "opciones": ["Agua", "Nestea", "Coca-Cola", "Malta"], "respuesta": "Nestea"},
             {"nivel": 2, "pregunta": "¿En qué año se fundó la UCAB?", "opciones": ["1963", "1953", "1952", "1962"], "respuesta": "1953"},
@@ -453,7 +461,6 @@ class TriviaUCABApp:
         self.color_exit_hover = "#c82333"
 
     def _cargar_fondo(self):
-        # Carga la imagen de fondo para darle ambiente visual al juego, o usa una alternativa si no existe.
         self.window.update_idletasks()
         self.screen_width = self.window.winfo_width()
         self.screen_height = self.window.winfo_height()
@@ -471,7 +478,6 @@ class TriviaUCABApp:
                 self.bg_photo = None
 
     def _crear_interfaz(self):
-        # Crea el canvas principal donde se dibujan los paneles, textos y botones del juego.
         self.canvas = tk.Canvas(self.window, width=self.screen_width, height=self.screen_height, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
 
@@ -483,7 +489,6 @@ class TriviaUCABApp:
         self._crear_ui_elements()
 
     def create_rounded_rect(self, x1, y1, x2, y2, radius=25, **kwargs):
-        # Versión propia de la función para crear rectángulos con bordes redondeados dentro de la trivia.
         points = [
             x1 + radius, y1, x1 + radius, y1, x2 - radius, y1, x2 - radius, y1, x2, y1,
             x2, y1 + radius, x2, y1 + radius, x2, y2 - radius, x2, y2 - radius, x2, y2,
@@ -493,7 +498,6 @@ class TriviaUCABApp:
         return self.canvas.create_polygon(points, **kwargs, smooth=True)
 
     def _crear_ui_elements(self):
-        # Dibuja la interfaz completa de la trivia: encabezado, panel de preguntas y botones de respuesta.
         center_x = self.screen_width // 2
         center_y = self.screen_height // 2
 
@@ -550,7 +554,6 @@ class TriviaUCABApp:
         self.canvas.tag_bind(exit_tag, "<Leave>", lambda e: self.canvas.itemconfig(self.exit_bg, fill=self.color_exit))
 
     def _hover(self, idx, entering):
-        # Cambia el color de los botones cuando el cursor entra o sale de ellos.
         if not self.buttons_active:
             return
         color = self.color_light_gold if entering else self.color_gold
@@ -562,7 +565,6 @@ class TriviaUCABApp:
         self.canvas.itemconfig(btn["text"], fill=fg_color)
 
     def _mostrar_pregunta(self, index):
-        # Muestra la pregunta actual y mezcla las opciones para que no siempre aparezcan en el mismo orden.
         if index < self.num_questions:
             self.buttons_active = True
             for i in range(4):
@@ -585,7 +587,6 @@ class TriviaUCABApp:
             self.window.destroy()
 
     def _verificar_respuesta(self, button_index):
-        # Comprueba si la opción elegida es correcta y actualiza las vidas o avanza al siguiente nivel.
         if not self.buttons_active:
             return
         self.buttons_active = False
@@ -619,16 +620,13 @@ class TriviaUCABApp:
                 self.window.after(2000, self._fin_del_juego)
 
     def _fin_del_juego(self):
-        # Finaliza la trivia cuando el jugador pierde todas sus vidas.
         messagebox.showerror("Fin del Juego", f"💀 {self.player_name}, te has quedado sin vidas. ¡Inténtalo de nuevo!")
         self.window.destroy()
 
-#====================================================================================
-#JUEGO WORDLE UCAB
-#====================================================================================
 
-# Función principal del Wordle UCAB. Crea una ventana independiente y controla todo el ciclo del juego:
-# cargar fondo, mostrar la cuadrícula, leer teclado y validar cada intento del jugador.
+# ====================================================================================
+# JUEGO WORDLE UCAB
+# ====================================================================================
 def iniciar_juego_wordle(v_wordle, player_name):
     v_wordle.title("Wordle UCAB")
     v_wordle.state("zoomed")
@@ -656,7 +654,6 @@ def iniciar_juego_wordle(v_wordle, player_name):
     canvas.focus_set()
 
     def load_background():
-        # Carga la imagen de fondo de Wordle o usa un fondo oscuro si no existe el archivo.
         fondo_wordle = "ucab.jpg"
         try:
             if os.path.exists(fondo_wordle):
@@ -669,7 +666,6 @@ def iniciar_juego_wordle(v_wordle, player_name):
             canvas.configure(bg="#1a1a1a")
 
     def inicializar_interfaz_juego():
-        # Reinicia la interfaz del juego para preparar una nueva palabra o una nueva ronda.
         canvas.delete("juego")
         v_wordle.update()
 
@@ -730,12 +726,10 @@ def iniciar_juego_wordle(v_wordle, player_name):
         canvas.create_window(center_x, panel_y1 + max(20, int(canvas_h * 0.04)), window=btn_salir, tags=("juego",))
 
     def actualizar_feedback(texto, color):
-        # Cambia el texto de ayuda debajo del tablero para informar al jugador del estado del intento.
         if canvas and game_state["text_feedback_id"]:
             canvas.itemconfig(game_state["text_feedback_id"], text=texto, fill=color)
 
     def mostrar_boton_siguiente(texto_boton):
-        # Muestra un botón para pasar a la siguiente palabra cuando el usuario adivina correctamente.
         game_state["enable_input"] = False
         canvas_w = max(1, canvas.winfo_width())
         canvas_h = max(1, canvas.winfo_height())
@@ -748,7 +742,6 @@ def iniciar_juego_wordle(v_wordle, player_name):
         canvas.create_window(canvas_w / 2, pos_y, window=boton_siguiente, tags=("juego",))
 
     def mostrar_felicitaciones_wordle():
-        # Muestra la pantalla final cuando el jugador completa el desafío de Wordle.
         game_state["enable_input"] = False
         canvas.delete("juego")
         canvas.configure(bg="#1a1a1a")
@@ -780,7 +773,6 @@ def iniciar_juego_wordle(v_wordle, player_name):
         canvas.create_window(texto_x, center_y + 130, window=btn_finalizar)
 
     def on_key(event):
-        # Captura las pulsaciones del teclado para escribir letras, borrar y validar intentos.
         if not game_state["enable_input"]:
             return
         if game_state["intento_actual"] >= 6:
@@ -851,6 +843,9 @@ def iniciar_juego_wordle(v_wordle, player_name):
     inicializar_interfaz_juego()
 
 
+# ====================================================================================
+# CONTROLADORES DE APERTURA DE VENTANAS
+# ====================================================================================
 def abrir_ventana_trivia():
     n = nombre_usuario()
     welcome_win = Toplevel(root)
