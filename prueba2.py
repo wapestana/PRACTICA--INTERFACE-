@@ -166,11 +166,26 @@ class ApensarGame:
         self.iniciar_nivel_ui()
 
     def dibujar_encabezado_juego(self, W):
-        lbl_back = self.canvas.create_text(60, 50, text="< Volver", font=("Arial", 18, "bold"), fill=TEXT_DARK, tags=("ui", "btn_volver"))
-        self.canvas.tag_bind(lbl_back, "<Button-1>", lambda e: self.window.destroy())
+        # 1. Definimos las dimensiones y posición del nuevo botón "Salir del Juego"
+        btn_x1, btn_y1 = 20, 30
+        btn_x2, btn_y2 = 180, 70
+        btn_cx, btn_cy = (btn_x1 + btn_x2) / 2, (btn_y1 + btn_y2) / 2
 
-        self.canvas.create_text(W / 2, 50, text=f"APENSAR UCAB - Nivel {self.progreso_idx + 1}", font=("Arial", 28, "bold"), fill=UCAB_BLUE, tags="ui")
+        # 2. Creamos el fondo redondeado rojo y el texto en blanco (ambos comparten la tag "btn_salir_apensar")
+        btn_bg = create_rounded_rect(self.canvas, btn_x1, btn_y1, btn_x2, btn_y2, 10, fill="#D93843", tags=("ui", "btn_salir_apensar"))
+        btn_txt = self.canvas.create_text(btn_cx, btn_cy, text="Salir del Juego", font=("Arial", 12, "bold"), fill=TEXT_LIGHT, tags=("ui", "btn_salir_apensar"))
 
+        # 3. Asignamos la acción de salir (cerrar ventana) al presionar el botón
+        self.canvas.tag_bind("btn_salir_apensar", "<Button-1>", lambda e: self.window.destroy())
+
+        # 4. Agregamos el efecto de "hover" (cambio de color al pasar el cursor)
+        self.canvas.tag_bind("btn_salir_apensar", "<Enter>", lambda e: self.canvas.itemconfig(btn_bg, fill="#A6242B"))
+        self.canvas.tag_bind("btn_salir_apensar", "<Leave>", lambda e: self.canvas.itemconfig(btn_bg, fill="#D93843"))
+
+        # 5. Título principal en color negro (TEXT_DARK)
+        self.canvas.create_text(W / 2, 50, text=f"APENSAR UCAB - Nivel {self.progreso_idx + 1}", font=("Arial", 28, "bold"), fill=TEXT_DARK, tags="ui")
+
+        # 6. Indicador de vidas y contador en color negro (TEXT_DARK)
         self.canvas.create_oval(W - 140, 35, W - 105, 70, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
         self.canvas.create_text(W - 122, 53, text="❤", font=("Arial", 18), fill="red", tags="ui")
         self.canvas.create_text(W - 60, 52, text=str(self.vidas), font=("Arial", 20, "bold"), fill=TEXT_DARK, tags=("ui", "txt_vidas"))
