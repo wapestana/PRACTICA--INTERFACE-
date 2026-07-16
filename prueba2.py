@@ -5,8 +5,7 @@ from PIL import Image, ImageTk
 import os
 import random
 
-# Se importan las librerías necesarias para crear la interfaz gráfica, mostrar imágenes,
-# trabajar con archivos locales y generar elementos aleatorios dentro de los juegos.
+
 
 # ====================================================================================
 # CONFIGURACIÓN GENERAL Y ESTILOS
@@ -126,20 +125,20 @@ class ApensarGame:
         self.cargar_nivel()
 
     def _cargar_fondo(self):
-        # Carga la imagen del campus de fondo y aplica un filtro claro para mejorar legibilidad
+        # Carga la imagen del campus de fondo 
         self.window.update_idletasks()
         W = self.window.winfo_width()
         H = self.window.winfo_height()
         if W <= 1 or H <= 1:
             W, H = self.window.winfo_screenwidth(), self.window.winfo_screenheight()
 
-        ruta_fondo = "imagen_apensar_ucab.jpg"
+        ruta_fondo = "imagen_apensar_ucab.png"
         if os.path.exists(ruta_fondo):
             try:
                 img = Image.open(ruta_fondo)
                 bg_image = img.resize((W, H), Image.Resampling.LANCZOS)
                 # Aplicamos un overlay blanco semitransparente (alfa=120) para que resalte la UI original
-                overlay = Image.new("RGBA", bg_image.size, (255, 255, 255, 120))
+                overlay = Image.new("RGBA", bg_image.size, (255, 255, 255, 90))
                 img_rgba = bg_image.convert("RGBA")
                 bg_image = Image.alpha_composite(img_rgba, overlay)
                 self.bg_photo = ImageTk.PhotoImage(bg_image)
@@ -167,14 +166,14 @@ class ApensarGame:
         self.iniciar_nivel_ui()
 
     def dibujar_encabezado_juego(self, W):
-        lbl_back = self.canvas.create_text(60, 50, text="< Volver", font=("Arial", 18, "bold"), fill=UCAB_BLUE, tags=("ui", "btn_volver"))
+        lbl_back = self.canvas.create_text(60, 50, text="< Volver", font=("Arial", 18, "bold"), fill=TEXT_DARK, tags=("ui", "btn_volver"))
         self.canvas.tag_bind(lbl_back, "<Button-1>", lambda e: self.window.destroy())
 
         self.canvas.create_text(W / 2, 50, text=f"APENSAR UCAB - Nivel {self.progreso_idx + 1}", font=("Arial", 28, "bold"), fill=UCAB_BLUE, tags="ui")
 
         self.canvas.create_oval(W - 140, 35, W - 105, 70, fill=UCAB_YELLOW, outline=TEXT_LIGHT, width=2, tags="ui")
         self.canvas.create_text(W - 122, 53, text="❤", font=("Arial", 18), fill="red", tags="ui")
-        self.canvas.create_text(W - 60, 52, text=str(self.vidas), font=("Arial", 20, "bold"), fill=UCAB_BLUE, tags=("ui", "txt_vidas"))
+        self.canvas.create_text(W - 60, 52, text=str(self.vidas), font=("Arial", 20, "bold"), fill=TEXT_DARK, tags=("ui", "txt_vidas"))
 
     def iniciar_nivel_ui(self):
         W = self.window.winfo_width()
