@@ -436,7 +436,7 @@ class TriviaUCABApp:
             {"nivel": 12, "pregunta": "Según QS, ¿qué posición ocupa la UCAB entre las universidades privadas de Venezuela?", "opciones": ["Primer lugar", "Segundo lugar", "Tercer lugar", "Cuarto lugar"], "respuesta": "Primer lugar"},
             {"nivel": 13, "pregunta": "¿Qué idioma extranjero debe aprobar obligatoriamente un estudiante de pregrado para graduarse?", "opciones": ["Italiano", "Alemán", "Portugués", "Inglés"], "respuesta": "Inglés"},
             {"nivel": 14, "pregunta": "El edificio de aulas se divide en bloques; ¿cómo se les llama?", "opciones": ["Pasillos", "Unidades", "Programas", "Módulos"], "respuesta": "Módulos"},
-            {"nivel": 15, "pregunta": "¿Cómo se llama el trabajo final de investigación que deben presentar para obtener el título?", "opciones": ["Investigación Final", "Tesis de Grado", "Trabajo Final", "Parcial Final"], "respuesta": "Tesis de Grado"},
+            {"nivel": 15, "pregunta": "¿Cómo se llama el trabajo final de investigación que deben presentar los estudiantes para obtener el título?", "opciones": ["Investigación Final", "Tesis de Grado", "Trabajo Final", "Parcial Final"], "respuesta": "Tesis de Grado"},
         ]
 
         self.num_questions = 10
