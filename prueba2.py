@@ -70,14 +70,14 @@ NIVELES_APENSAR = [
     {
         "palabra": "ANDRESBELLO",
         "imagenes": [
-            "andresbello.png",
+            "andresbello3.jpg",
             "andresbello1.jpg",
             "andresbello2.png",
             "andresbello5.png"
         ]
     },
     {
-        "palabra": "CINQUENTENARIO",
+        "palabra": "CINCUENTENARIO",
         "imagenes": [
             "50ucab.png",
             "50ucab1.png",
